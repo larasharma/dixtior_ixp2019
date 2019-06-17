@@ -57,21 +57,21 @@ for feature, importance in zip(feature_names, clf.feature_importances_ ):
     print( '%s has importance %.2f %%' % (feature, importance*100) )
 
 with open(os.path.join(DATA, 'entities.csv')) as file:
-    ent = pd.read_csv(file, sep=';', nrows=1000)
+    ent = pd.read_csv(file, sep=';')
 
 with open(os.path.join(DATA, 'accounts.csv')) as file:
-    acc = pd.read_csv(file, sep=';', nrows=1000)
+    acc = pd.read_csv(file, sep=';')
     
 with open(os.path.join(DATA, 'behavioural_risk.csv')) as file:
-    br = pd.read_csv(file, sep=';', nrows=1000)
+    br = pd.read_csv(file, sep=';')
     
 br.convert_objects(convert_numeric=True)
 
 with open(os.path.join(DATA, 'entities.csv')) as file:
-    ent = pd.read_csv(file, sep=';', nrows=1000)
+    ent = pd.read_csv(file, sep=';')
     
 with open(os.path.join(DATA, 'entity_client.csv')) as file:
-    ec = pd.read_csv(file, sep=';', nrows=1000)    
+    ec = pd.read_csv(file, sep=';')    
 
 #%% =============================================================================
 
