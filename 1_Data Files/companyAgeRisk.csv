@@ -1,0 +1,4 @@
+﻿age_less_than_or_equal,desc,risk
+3,0 ≤ Idade ≤ 3,5
+5,3 < Idade ≤ 5,3
+999,Idade > 5,1

@@ -1,0 +1,259 @@
+﻿cod,desc,risk
+AFG,Afghanistan,5
+AGO,Angola,5
+AIA,Anguilha,5
+AND,Andorra,5
+ARE,United Arab Emirates,5
+ATG,Antigua and Barbuda,5
+BDI,Burundi,5
+BHR,Bahrain,5
+BHS,"Bahamas, The",5
+BIH,Bosnia and Herzegovina,5
+BLR,Belarus,5
+BLZ,Belize,5
+BMU,Bermuda,5
+BOL,Bolivia,5
+BRB,Barbados,5
+BRN,Brunei,5
+BYS,Bielorussia,5
+CAF,Central African Republic,5
+CCK,Cocos (Keeling) Islands,5
+CHN,"China, People's Republic of",5
+COD,Democratic Republic of Congo,5
+COG,"Congo, (Congo Â– Brazzaville)",5
+CRI,Costa Rica,5
+CUB,Cuba,5
+CYM,Cayman Islands,5
+DJI,Djibouti,5
+DMA,Dominica,5
+DOM,Dominican Republic,5
+DZA,Algeria,5
+ECU,Ecuador,5
+EGY,Egypt,5
+ERI,Eritrea,5
+ETH,Ethiopia,5
+FJI,Fiji,5
+FLK,Falkland Islands (Islas Malvinas),5
+GGY,Guernsey,5
+GIB,Gibraltar,5
+GIN,Guinea,5
+GMB,"Gambia, The",5
+GNB,Guinea-Bissau,5
+GNQ,Equatorial Guinea,5
+GRD,Grenada,5
+GTM,Guatemala,5
+GUM,Guam,5
+HND,Honduras,5
+HTI,Haiti,5
+HVO,Burkina Faso,5
+IDN,Indonesia,5
+IMN,Isle of Man,5
+IRN,Iran,5
+IRQ,Iraq,5
+JAM,Jamaica,5
+JEY,Jersey,5
+JOR,Jordan,5
+KEN,Kenya,5
+KHM,Cambodia,5
+KIR,Kiribati,5
+KNA,Saint Kitts and Nevis,5
+KOR,"Korea, South",5
+KWT,Kuwait,5
+LAO,Laos,5
+LBN,Lebanon,5
+LBR,Liberia,5
+LBY,Libya,5
+LCA,Saint Lucia,5
+LKA,Sri Lanka,5
+MAC,Macau,5
+MCO,Monaco,5
+MDA,Moldova,5
+MDV,Maldives,5
+MHL,Marshall Islands,5
+MLI,Mali,5
+MMR,Myanmar (Burma),5
+MNE,Montenegro,5
+MOZ,Mozambique,5
+MSR,Montserrat,5
+MUS,Mauritius,5
+MYS,Malaysia,5
+NFK,Norfolk Island,5
+NGA,Nigeria,5
+NIU,Niue,5
+NPL,Nepal,5
+NRU,Nauru,5
+OMN,Oman,5
+PAK,Pakistan,5
+PAN,Panama,5
+PCN,Pitcairn Islands,5
+PHL,Philippines,5
+PLW,Palau,5
+PNG,Papua New Guinea,5
+PRI,Puerto Rico,5
+PRK,"Korea, North",5
+PRY,Paraguay,5
+PSE,Palestinian Territory,5
+QAT,Qatar,5
+RUS,Russia,5
+SDN,Sudan,5
+SHN,Saint Helena,5
+SLE,Sierra Leone,5
+SMR,San Marino,5
+SOM,Somalia,5
+SRB,Serbia,5
+SSD,South Sudan,5
+STP,Sao Tome and Principe,5
+SYC,Seychelles,5
+SYR,Syria,5
+TCD,Chad,5
+TTO,Trinidad and Tobago,5
+TUN,Tunisia,5
+UKR,Ukraine,5
+VCT,Saint Vincent and the Grenadines,5
+VEN,Venezuela,5
+VGB,British Virgin Islands,5
+VUT,Vanuatu,5
+WSM,Samoa,5
+YEM,Yemen,5
+YUG,Jugoslavia,5
+ZWE,Zimbabwe,5
+ALB,Albania,4
+ANT,Netherlands Antilles,4
+ARM,Armenia,4
+ASM,American Samoa,4
+AZE,Azerbaijan,4
+BGD,Bangladesh,4
+CMR,Cameroon,4
+COL,Colombia,4
+COM,Comoros,4
+CUW,Curaçao,4
+ESH,Western Sahara ,4
+IRN,Qeshm (Islands),4
+KAZ,Kazakhstan,4
+KGZ,Kyrgyzstan,4
+MAR,Morocco,4
+MDG,Madagascar,4
+MNG,Mongolia,4
+MRT,Mauritania,4
+NAM,Namibia,4
+NIC,Nicaragua,4
+PER,Peru,4
+SLV,El Salvador,4
+SXM,Sint Maarten (Dutch part),4
+TCA,Turks and Caicos Islands,4
+THA,Thailand,4
+TJK,Tajikistan,4
+TKM,Turkmenistan,4
+TUR,Turkey,4
+UGA,Uganda,4
+UZB,Uzbekistan,4
+VNM,Vietnam,4
+ABW,Aruba,3
+ASC,Ascension,3
+BEN,Benin,3
+BES,"Bonaire, Sint Eustatius and Saba",3
+BLM,Saint Barthelemy,3
+BRA,Brazil,3
+BWA,Botswana,3
+CIV,Cote d'Ivoire (Ivory Coast),3
+COK,Cook Islands,3
+CXR,Christmas Island,3
+FRO,Faroe Islands,3
+FSM,Micronesia,3
+GAB,Gabon,3
+GEO,Georgia,3
+GHA,Ghana,3
+GRL,Greenland,3
+GUY,Guyana,3
+HKG,Hong Kong,3
+IND,India,3
+ISR,Israel,3
+LIE,Liechtenstein,3
+MEX,Mexico,3
+MKD,Macedonia,3
+MNP,Northern Mariana Islands,3
+NCL,New Caledonia,3
+NER,Niger,3
+PUS,Pacific Islands,3
+PYF,French Polynesia,3
+SEN,Senegal,3
+SJM,Svalbard,3
+SLB,Solomon Islands,3
+SPM,Saint Pierre and Miquelon,3
+SUR,Suriname,3
+SWZ,Swaziland,3
+TAA,Tristan da Cunha,3
+TKL,Tokelau,3
+TLS,Timor-Leste (East Timor),3
+TMP,East Timor,3
+TON,Tonga,3
+TUV,Tuvalu,3
+TWN,"China, Republic of (Taiwan)",3
+TZA,Tanzania,3
+URY,Uruguay,3
+VIR,U.S. Virgin Islands,3
+WLF,Wallis and Futuna,3
+ZAF,South Africa,3
+ALA,Aland,2
+ARG,Argentina,2
+ATA,Australian Antarctic Territory,2
+BFA,Burkina Faso,2
+BGR,Bulgaria,2
+BTN,Bhutan,2
+CAN,Canada,2
+CHE,Switzerland,2
+CHL,Chile,2
+CYP,Cyprus,2
+CZE,Czech Republic,2
+ESP,Spain,2
+EST,Estonia,2
+GBR,United Kingdom,2
+GRC,Greece,2
+GUF,French Guiana,2
+HRV,Croatia,2
+HUN,Hungary,2
+ITA,Italy,2
+JPN,Japan,2
+LSO,Lesotho,2
+LTU,Lithuania,2
+LUX,Luxembourg,2
+LVA,Latvia,2
+MAF,St Martin,2
+MLT,Malta,2
+MTQ,Martinique,2
+MWI,Malawi,2
+MYT,Mayotte,2
+NLD,Netherlands,2
+POL,Poland,2
+PRT,Portugal,2
+REU,Reunion,2
+ROM,Romania,2
+ROU,Romania,2
+RWA,Rwanda,2
+SAU,Saudi Arabia,2
+SGP,Singapore,2
+SGS,South Georgia & South Sandwich Islands,2
+SVK,Slovakia,2
+SVN,Slovenia,2
+TGO,Togo,2
+USA,United States,2
+VAT,Vatican City,2
+ZMB,Zambia,2
+ATF,French Southern and Antarctic Lands,1
+AUS,Australia,1
+AUT,Austria,1
+BEL,Belgium,1
+BVT,Bouvet Island,1
+CPV,Cape Verde,1
+DEU,Germany,1
+DNK,Denmark,1
+FIN,Finland,1
+FRA,France,1
+HMD,Heard Island and McDonald Islands,1
+IOT,British Indian Ocean Territory,1
+IRL,Ireland,1
+ISL,Iceland,1
+NOR,Norway,1
+NZL,New Zealand,1
+SWE,Sweden,1
+UMI,Baker Island,1
