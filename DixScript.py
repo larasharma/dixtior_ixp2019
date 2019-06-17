@@ -11,7 +11,6 @@ Created on Mon Jun 17 15:47:30 2019
 Generates BANKA tables
 """
 
-#%% =============================================================================
 
 import os, sys
 
@@ -25,7 +24,7 @@ try:
     PROJECT_PATH = SCRIPTS[:-( 1 + len(SCRIPT_FOLDER) )]
 except:
     from global_constants import BASE_PROJECT_PATHS    
-    #Determina o caminho do projeto e dos scripts
+    #Determine the paths to the projects and the scripts
     PROJECT_PATH = os.path.join( BASE_PROJECT_PATHS[PROJECT_FAMILY])
     SCRIPTS = os.path.join(PROJECT_PATH,SCRIPT_FOLDER)
     del(BASE_PROJECT_PATHS)
@@ -40,7 +39,7 @@ for path in PATH_TO_APPEND_LIST:
     if path not in sys.path:
         sys.path.append( path )
 
-#%% =============================================================================
+
 #IMPORTS - PYTHON MODULES
 import pandas as pd
 import numpy as np
@@ -52,18 +51,8 @@ from scipy import stats
 #User defined constants
 from constants import RANDOM_STATE, DATA, P
 
-#%% =============================================================================
 
-#Load the data and fit a decision tree
-iris = load_iris()
-clf = tree.DecisionTreeClassifier(random_state = RANDOM_STATE)
-clf = clf.fit(iris.data, iris.target)
-
-#Show the importance of each feature
-feature_names = iris['feature_names']
-for feature, importance in zip(feature_names, clf.feature_importances_ ):
-    print( '%s has importance %.2f %%' % (feature, importance*100) )
-
+#Open files
 with open(os.path.join(DATA, 'entities.csv')) as file:
     ent = pd.read_csv(file, sep=';')
 
@@ -82,7 +71,6 @@ with open(os.path.join(DATA, 'entity_client.csv')) as file:
     ec = pd.read_csv(file, sep=';')  
 
 
-#%% =============================================================================
 
 xls = pd.ExcelFile(os.path.join(DATA, 'Risk Tables.xlsx'))
 
@@ -91,11 +79,10 @@ countrisk = pd.read_excel(xls, 'CountryRisk')
 compage = pd.read_excel(xls, 'CompanyAgeRisk')
 
 
-#%% =============================================================================
-   
+
 ## DATA CLEANING
 
-## Verify unique accounts - clearing duplicates
+##Verify unique accounts - clearing duplicates
 ec.client_number.value_counts().head()
 ec.entity_number.value_counts().head()
 ec['unique_entities'] = ec.client_number.astype(str).str.cat(
@@ -112,16 +99,21 @@ acc.unique_accounts.value_counts().head()
 del ec["unique_entities"]
 del acc["unique_accounts"]
 
-## Fill NA
+##Fill NA
 br.continuous_risk = br.continuous_risk.fillna(br.continuous_risk.mean())
 br.discrete_risk = br.discrete_risk.fillna(br.discrete_risk.mean())
 
-## Duplicates
+##Duplicates in other tables
 br.shape
 br[br.duplicated()].shape
-br.shape
 
-#%%
+ent.shape
+ent[ent.duplicated()].shape
+
+ec[ec.duplicated()].shape
+
+countrisk[countrisk.duplicated()].shape
+
 ##Data Quality Assurance
 
 ent.date_of_birth.value_counts().head()
@@ -135,42 +127,45 @@ ent.loc[(ent['date_of_birth'] == 0) & (ent["entity_type"] != "P")].shape
 ent.loc[(ent['date_of_birth'] == 0) & (ent["entity_type"] == "P")].shape
 ent.loc[(ent['date_of_birth'] < 0)]
 
+ent['date_of_birth'] = abs(ent['date_of_birth'])
 
-#%%
-ent.shape
-ent[ent.duplicated()].shape
-ent.shape
+len(ent.entity_number)
 
-ec[ec.duplicated()].shape
-
-countrisk[countrisk.duplicated()].shape
+#Remove the people with birthdate of 0
+ent1 = ent[~((ent.entity_type == 'P') & (ent.date_of_birth ==0))]
 
 
-## Extreme Values
-def outliers_col(df):
+# Missing Values:
+
+n_records = len(ent)
+def missing_values_df(df):
     for column in df:
-        if df[column].dtype != np.object:
-            n_outliers = len(df[(np.abs(stats.zscore(df[column])) > 3)& \
-                  (df[column].notnull())
-                 ])
-            print("{} | {} | {}".format(
-                df[column].name,
-                n_outliers,
-                df[column].dtype
+        print("{} | {} | {}".format(
+            column, len(df[df[column].isnull()]) / (1.0*n_records), df[column].dtype
         ))
 
-outliers_col(ent)
+missing_values_df(ent)
 
 
-'''
-## Hölder mean: 
-grouped_risk= br_acc.groupby('client_number')
+risk_ent = ent.copy()
+risk_ent = risk_ent[[
+       'age_risk', 'company_age_risk', 'country_of_residence_risk',
+        'economic_activity_code_risk', 'nationality_risk',
+       'occupation_risk', 'qualifications_risk', 'society_type_risk'] ]
 
-for i in br_acc.continuous_risk:
-((1/n)**(1/p)) * (sum(br_acc.continuous_risk[i]**p))**(1/p)
-'''
+#cutoff_cl
+#country_of_res: both
+#nationality: P
+#qualifications: P
 
+test = ent.isnull().sum(axis=1)
 
+result = []
+for seg, ent_aux in ent.groupby('entity_type'):
+    null_count = ( ent_aux.isnull().sum()/ent.shape[0] ).to_frame('null_percent')
+    null_count['entity_type']  = seg  
+    result.append( null_count)
+result_df = pd.concat(result).reset_index(drop=False)
 ## ENTITY BEHAVIOURAL RISK
 # Determine Client risk and then determine the percentage per entity
 
@@ -183,6 +178,15 @@ for i in br_acc.continuous_risk:
      
    - Main entities have the same risk as regular entities.
    
+'''
+
+'''
+## Hölder mean: 
+grouped_risk= br_acc.groupby('client_number')
+
+for i in br_acc.continuous_risk:
+    ((1/n)**(1/p)) * (sum(br_acc.continuous_risk[i]**p))**(1/p)
+
 '''
     
 ## Merge tables
