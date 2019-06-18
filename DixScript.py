@@ -99,10 +99,6 @@ acc.unique_accounts.value_counts().head()
 del ec["unique_entities"]
 del acc["unique_accounts"]
 
-##Fill NA
-br.continuous_risk = br.continuous_risk.fillna(br.continuous_risk.mean())
-br.discrete_risk = br.discrete_risk.fillna(br.discrete_risk.mean())
-
 ##Duplicates in other tables
 br.shape
 br[br.duplicated()].shape
@@ -137,27 +133,46 @@ ent1 = ent[~((ent.entity_type == 'P') & (ent.date_of_birth ==0))]
 
 # Missing Values:
 
-n_records = len(ent)
+## Split into 2 databases to see the missing values in the 2 dataframes:
+private = ent1.copy()
+private = ent1[ent1.entity_type == 'P']
+
+n_records1 = len(private)
 def missing_values_df(df):
     for column in df:
         print("{} | {} | {}".format(
-            column, len(df[df[column].isnull()]) / (1.0*n_records), df[column].dtype
+            column, len(df[df[column].isnull()]) / (1.0*n_records1), df[column].dtype
         ))
 
-missing_values_df(ent)
+missing_values_df(private)
+## We can see that there is no null value in the risk columns that are 
+## associated with private entities.
 
 
-risk_ent = ent.copy()
-risk_ent = risk_ent[[
-       'age_risk', 'company_age_risk', 'country_of_residence_risk',
-        'economic_activity_code_risk', 'nationality_risk',
-       'occupation_risk', 'qualifications_risk', 'society_type_risk'] ]
+
+empresas = ent1.copy()
+empresas = ent1[ent1.entity_type == 'E']
+empresas
+
+n_records2 = len(empresas)
+def missing_values_df(df):
+    for column in df:
+        print("{} | {} | {}".format(
+            column, len(df[df[column].isnull()]) / (1.0*n_records2), df[column].dtype
+        ))
+
+missing_values_df(empresas)
+
+## We can see that there is no null value in the risk columns that are 
+## associated with enterprises (empresas).
 
 #cutoff_cl
 #country_of_res: both
 #nationality: P
 #qualifications: P
 
+
+'''
 test = ent.isnull().sum(axis=1)
 
 result = []
@@ -166,6 +181,9 @@ for seg, ent_aux in ent.groupby('entity_type'):
     null_count['entity_type']  = seg  
     result.append( null_count)
 result_df = pd.concat(result).reset_index(drop=False)
+
+'''
+
 ## ENTITY BEHAVIOURAL RISK
 # Determine Client risk and then determine the percentage per entity
 
