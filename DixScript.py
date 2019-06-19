@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -127,7 +128,7 @@ ent['date_of_birth'] = abs(ent['date_of_birth'])
 
 len(ent.entity_number)
 
-#Remove the people with birthdate of 0
+#Remove the private entities with birthdate of 0
 ent1 = ent[~((ent.entity_type == 'P') & (ent.date_of_birth ==0))]
 
 
@@ -166,77 +167,87 @@ missing_values_df(empresas)
 ## We can see that there is no null value in the risk columns that are 
 ## associated with enterprises (empresas).
 
+
 #cutoff_cl
 #country_of_res: both
 #nationality: P
 #qualifications: P
 
+##ENTITY BEHAVIOURAL RISK
 
-'''
-test = ent.isnull().sum(axis=1)
+#Compute how many entities in each client
+client_size = ec.groupby('client_number').size().to_frame('client_size')
+#Add this to the dataframe (create a new one)
+ec2 = ec.merge(client_size, left_on = 'client_number', right_index = True)
+#Compute inverses
+ec2['weight_aux'] = 1/ec2['client_size']
+#Now add all auxiliary weights to normalize
+weight_aux_sum = ec2.groupby('client_number')['weight_aux'].sum(
+        ).to_frame('weight_aux_sum')
+#Add the column to the dataframe and compute final weight
+ec2 = ec2.merge(weight_aux_sum, left_on = 'client_number', right_index = True)
+ec2['weight'] = ec2['weight_aux']/ec2['weight_aux_sum']
 
-result = []
-for seg, ent_aux in ent.groupby('entity_type'):
-    null_count = ( ent_aux.isnull().sum()/ent.shape[0] ).to_frame('null_percent')
-    null_count['entity_type']  = seg  
-    result.append( null_count)
-result_df = pd.concat(result).reset_index(drop=False)
+from numpy.linalg import norm
+#Comes from constants
+P=2
 
-'''
-
-## ENTITY BEHAVIOURAL RISK
-# Determine Client risk and then determine the percentage per entity
-
-'''Assumptions:
-    
-   - Client risk is that of the riskiest account it holds. 
+def weighted_holder(series, p=1, weight = None):
    
-   - The client risk is equally distributed among entities 
-     that form the client.
-     
-   - Main entities have the same risk as regular entities.
-   
-'''
-
-'''
-## Hölder mean: 
-grouped_risk= br_acc.groupby('client_number')
-
-for i in br_acc.continuous_risk:
-    ((1/n)**(1/p)) * (sum(br_acc.continuous_risk[i]**p))**(1/p)
-
-'''
+    #Function to compute the weighted Holder average
+    #TODO: complete this docstring
     
-## Merge tables
-br_acc = pd.merge(acc, br, on='account_number')
-
-
-## Associate client risk to maximum risk of accounts
-max_risk= br_acc.groupby('client_number').max().continuous_risk
-risk_client = pd.merge(br_acc, max_risk, on ='client_number')
-
-
-
-## Merge the resulting table with the entity_client table
-ent_br = pd.merge(ec, risk_client, on='client_number')[['client_number',
-        'entity_number', 
-        'continuous_risk_y']].rename(columns={
-        "continuous_risk_y": 'risk_client'})
-
-
-## Count the number of entities that form each client
-count_entity = ent_br.groupby('client_number').count().entity_number
-with_ent = pd.merge(ent_br, count_entity, on='client_number').rename(columns={
-        "entity_number_y": 'count_ent'})
-
-
+    """
+    Arguments:
     
-## Distribute the risk evenly among the entities
-with_ent['perc_risk'] = 1/with_ent['count_ent']
-with_ent['ent_b_risk'] = with_ent['risk_client'] * with_ent['perc_risk']
+       series: df.series
+                Series for which you calculate the weighted holder mean.
+                
+       p: int (default: 1)
+          Determines the weight given to higher numbers. 
+          If p=1, lower numbers are as important as larger numbers.
+          If p=np.inf (infinity), the maximum number is the only number
+          that matters.
+          
+       weight: float (default: None)
+          Weight assigned to an element of the series. 
+          In the entities-account case, it is the weight assigned to the
+          account risk based on the number of entities that form the
+          client that owns the account.
+          
+    Returns:
+         The weighted hölder mean of the series.
+     """
+    
+    if weight is None:
+        weight = 1/series.shape[0]
+    
+    #Maximum - weights don't matter as long as weights are not zero
+    if p == np.inf:
+        result = series.max()
+    #Better to assume
+    else:
+        result = (weight*series**p).sum()**(1/p)
+    
+    return result
+
+#TODO: Generate randomly, then use real behavioural risk
+rng = np.random.RandomState(123)
+ec2['risk'] = rng.uniform(size=ec2.shape[0]) 
+
+#TODO: Check if it is correct (manually for 1 or 2 cases - it will also help
+#you to get a feel of the impact of the choice of p)
+weighted_risk = ec2.groupby('client_number')['risk'].agg(weighted_holder)
 
 
+#One model for p and E (for each)
+#You can focus on one of them
 
-## Remove and rename columns to get the final table
-final = with_ent[['entity_number_x', 'ent_b_risk']].rename(columns={
-        "entity_number_x": 'entity_number'})
+#input: pred variabels, seg name (p or E), 
+#output can be the same, 
+
+#Build 2 csvs
+#Create br for entities
+
+
+ 
