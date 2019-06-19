@@ -7,7 +7,6 @@ Created on Wed Jun 19 12:01:31 2019
 """
 #%%
 import pandas as pd
-import numpy as np
 
 from warnings import warn
 
@@ -30,7 +29,7 @@ with open('empresas.csv') as file:
 
 #%%
 ec_df = ec_df.drop(['is_first'], axis=1)
-br_df = br_df.drop(['continuous_risk'], axis=1)
+br_df = br_df.drop(['discrete_risk'], axis=1)
 
 #br_df = br_df.drop(columns = ['continuous_risk', 'cluster' ], axis=1)
 
@@ -41,16 +40,19 @@ ec_acc_df = pd.merge(ec_df,accounts_df, left_on="client_number", right_on="clien
 #%%
 
 #creating one large dataset connecting entity number to behavioral risk
-entity_behav_risk_df = pd.merge(ec_acc_df, br_df, left_on="account_number", right_on="account_number", how='outer')
+entity_behav_risk_df = pd.merge(br_df, ec_acc_df, left_on="account_number", right_on="account_number", how='inner')
 
-dormant_acc = entity_behav_risk_df[entity_behav_risk_df.cluster == 660]
+#reordering the columns
+entity_behav_risk_df = entity_behav_risk_df[['entity_number','client_number','account_number','cluster','continuous_risk']]
+
+#dormant_acc = entity_behav_risk_df[entity_behav_risk_df.cluster == 660]
 
 
 #%%
-for seg, behav_aux in entity_behav_risk_df.groupby('discrete_risk'):
+for seg, behav_aux in entity_behav_risk_df.groupby('continuous_risk'):
         null_count = ( behav_aux.isnull().sum())
 
-n_missing = null_count['discrete_risk']
+n_missing = null_count['continuous_risk']
 if n_missing > 0:
     warn ("There are missing values")
 
