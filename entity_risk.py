@@ -41,7 +41,7 @@ ec_acc_df = pd.merge(ec_df,accounts_df, left_on="client_number", right_on="clien
 #%%
 
 #creating one large dataset connecting entity number to behavioral risk
-entity_behav_risk_df = pd.merge(ec_acc_df, br_df, left_on="account_number", right_on="account_number", how='outer')
+entity_behav_risk_df = pd.merge(br_df, ec_acc_df, left_on="account_number", right_on="account_number", how='inner')
 
 dormant_acc = entity_behav_risk_df[entity_behav_risk_df.cluster == 660]
 
