@@ -151,8 +151,10 @@ ent_e = ent.loc[ent["entity_type"] == "E"]
 ent_e.isnull().sum()
 ent_e.drop(["nationality_risk", "occupation_risk", "qualifications_risk", "age_risk"], axis = 1).head()
 
-ent_p.to_csv("1_Data_Files/particulares.csv")
-ent_e.to_csv("1_Data_Files/empresas.csv")
+ent_p.to_csv("particulares.csv")
+ent_e.to_csv("empresas.csv")
+
+
 #%%
 ent.shape
 ent[ent.duplicated()].shape
@@ -257,12 +259,27 @@ def weighted_holder(series, p=1, weight = None):
     """
     Function to compute the weighted Holder average
     #TODO: complete this docstring
-    
+
     Arguments:
-        ---
-        
-    Returns:
-        ---
+
+	    series: df.series
+	            Series for which you calculate the weighted holder mean.
+
+	    p: int (default: 1)
+	        Determines the weight given to higher numbers.
+	        If p=1, lower numbers are as important as larger numbers.
+	        If p=np.inf (infinity), the maximum number is the only number
+	        that matters.
+
+	    weight: float (default: None)
+	        Weight assigned to an element of the series.
+	        In the entities-account case, it is the weight assigned to the
+	        account risk based on the number of entities that form the
+	        client that owns the account.
+
+	    Returns:
+	        The weighted hölder mean of the series.
+	     
     """
 
     
