@@ -284,6 +284,14 @@ df2['risk'] = rng.uniform(size=df2.shape[0])
 
 #TODO: Check if it is correct (manually for 1 or 2 cases - it will also help
 #you to get a feel of the impact of the choice of p)
+<<<<<<< HEAD
 weighted_risk = df2.groupby('client_number')['risk'].agg(weighted_holder)
+=======
+weighted_risk = ec2.groupby('client_number')['risk'].agg(weighted_holder)
+
+
+
+
+>>>>>>> 2dc9b84... changes
 
 print(weighted_risk)
