@@ -11,7 +11,7 @@ Created on Mon Jun 17 15:47:30 2019
 Generates BANKA tables
 """
 
-#%% =============================================================================
+
 
 import os, sys
 
@@ -40,7 +40,6 @@ for path in PATH_TO_APPEND_LIST:
     if path not in sys.path:
         sys.path.append( path )
 
-#%% =============================================================================
 #IMPORTS - PYTHON MODULES
 import pandas as pd
 import numpy as np
@@ -52,12 +51,7 @@ from scipy import stats
 #User defined constants
 from constants import RANDOM_STATE, DATA, P
 
-#%% =============================================================================
 
-#Load the data and fit a decision tree
-iris = load_iris()
-clf = tree.DecisionTreeClassifier(random_state = RANDOM_STATE)
-clf = clf.fit(iris.data, iris.target)
 
 #Show the importance of each feature
 feature_names = iris['feature_names']
@@ -82,7 +76,7 @@ with open(os.path.join(DATA, 'entity_client.csv')) as file:
     ec = pd.read_csv(file, sep=';')  
 
 
-#%% =============================================================================
+
 
 xls = pd.ExcelFile(os.path.join(DATA, 'Risk Tables.xlsx'))
 
@@ -91,7 +85,7 @@ countrisk = pd.read_excel(xls, 'CountryRisk')
 compage = pd.read_excel(xls, 'CompanyAgeRisk')
 
 
-#%% =============================================================================
+
    
 ## DATA CLEANING
 
@@ -121,7 +115,7 @@ br.shape
 br[br.duplicated()].shape
 br.shape
 
-#%%
+
 ##Data Quality Assurance
 
 ent.date_of_birth.value_counts().head()
@@ -145,17 +139,19 @@ ent_by_type = ent.groupby("entity_type")
 
 ent_p = ent.loc[ent["entity_type"] == "P"]
 ent_p.isnull().sum()
-ent_p.drop(["company_age_risk", "economic_activity_code_risk", "society_type_risk"], axis = 1).head()
+ent_p.drop(["company_age_risk", "economic_activity_code_risk",
+            "society_type_risk"], axis = 1).head()
 
 ent_e = ent.loc[ent["entity_type"] == "E"]
 ent_e.isnull().sum()
-ent_e.drop(["nationality_risk", "occupation_risk", "qualifications_risk", "age_risk"], axis = 1).head()
+ent_e.drop(["nationality_risk", "occupation_risk", "qualifications_risk",
+            "age_risk"], axis = 1).head()
 
 ent_p.to_csv("particulares.csv")
 ent_e.to_csv("empresas.csv")
 
 
-#%%
+
 ent.shape
 ent[ent.duplicated()].shape
 ent.shape
@@ -191,18 +187,8 @@ for i in br_acc.continuous_risk:
 
 
 ## ENTITY BEHAVIOURAL RISK
-# Determine Client risk and then determine the percentage per entity
+# Determine entity risk
 
-'''Assumptions:
-    
-   - Client risk is that of the riskiest account it holds. 
-   
-   - The client risk is equally distributed among entities 
-     that form the client.
-     
-   - Main entities have the same risk as regular entities.
-   
-'''
     
 ## Merge tables
 br_acc = pd.merge(acc, br, on='account_number')
@@ -238,7 +224,7 @@ with_ent['ent_b_risk'] = with_ent['risk_client'] * with_ent['perc_risk']
 final = with_ent[['entity_number_x', 'ent_b_risk']].rename(columns={
         "entity_number_x": 'entity_number'})
     
-#%%
+
 client_size = ec.groupby('client_number').size().to_frame('client_size')
 #Add this to the dataframe (create a new one)
 df2 = ec.merge(client_size, left_on = 'client_number', right_index = True)
@@ -255,7 +241,7 @@ from numpy.linalg import norm
 #Comes from constants
 P=2
 
-def weighted_holder(series, p=1, weight = None):
+def weighted_holder(series, p=P, weight = None):
     """
     Function to compute the weighted Holder average
     #TODO: complete this docstring
@@ -295,20 +281,65 @@ def weighted_holder(series, p=1, weight = None):
     
     return result
 
-#TODO: Generate randomly, then use real behavioural risk
-rng = np.random.RandomState(123)
-df2['risk'] = rng.uniform(size=df2.shape[0]) 
+#TODO: Assign risk to the entities using the weighted holder mean
+ec = ec.drop(['is_first'], axis=1)
+br = br.drop(['discrete_risk'], axis=1)
+
+#br_df = br_df.drop(columns = ['continuous_risk', 'cluster' ], axis=1)
+
+
+
+ec_acc_df = pd.merge(ec,acc, left_on="client_number", 
+                     right_on="client_number")
+
+
+
+#creating one large dataset connecting entity number to behavioral risk
+entity_behav_risk_df = pd.merge(br, ec_acc_df, left_on="account_number", 
+                                right_on="account_number", how='inner')
+
+#reordering the columns
+entity_behav_risk_df = entity_behav_risk_df[['entity_number','client_number',
+                            'account_number','cluster','continuous_risk']]
+
+#dormant_acc = entity_behav_risk_df[entity_behav_risk_df.cluster == 660]
+
+
+
+
+#TODO: accomodate for future immature values by determining if the account 
+#is tied to a private or enterprise, then assigning an average value for 
+#the risk based of if it is an enterprise or if it is a private 
+
+for seg, behav_aux in entity_behav_risk_df.groupby('continuous_risk'):
+        null_count = ( behav_aux.isnull().sum())
+
+n_missing = null_count['continuous_risk']
+if n_missing > 0:
+    warn ("There are missing values")
+
+
+
+entity_behav_risk_df.to_csv("entity_behavioral_risk.csv")
+    
+holder_risk = entity_behav_risk_df.groupby('entity_number', 
+                    as_index=False).apply(weighted_holder)
+#OR: weighted_risk = holder_risk.groupby('entity_number')['continuous_risk'].agg(weighted_holder)
+final = pd.merge(entity_behav_risk_df, holder_risk, on='entity_number')
+final= final[['entity_number', 'continuous_risk_y']].rename(columns={
+        "continuous_risk_y": 'continuous_risk'})
+final
 
 #TODO: Check if it is correct (manually for 1 or 2 cases - it will also help
 #you to get a feel of the impact of the choice of p)
-<<<<<<< HEAD
-weighted_risk = df2.groupby('client_number')['risk'].agg(weighted_holder)
-=======
-weighted_risk = ec2.groupby('client_number')['risk'].agg(weighted_holder)
 
 
 
 
->>>>>>> 2dc9b84... changes
 
-print(weighted_risk)
+
+
+
+
+
+
