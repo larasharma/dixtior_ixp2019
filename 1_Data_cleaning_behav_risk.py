@@ -45,7 +45,7 @@ import numpy as np
 from warnings import warn
 
 #User defined constants
-from constants import DATA, TABLES, P
+from constants import DATA, TABLES, P, WEIGHT_HOLDER_BOOL
 
 # =============================================================================
 #IMPORTS 
@@ -66,35 +66,28 @@ with open(os.path.join(DATA, 'entity_client.csv')) as file:
 ## DATA CLEANING
 ## Verify unique accounts 
 
-ent_client.client_number.value_counts().head()
-ent_client.entity_number.value_counts().head()
-ent_client['unique_entities'] = ent_client.client_number.astype(str).str.cat(
+ent_client['unique_entity_client'] = ent_client.client_number.astype(str).str.cat(
     [ent_client.entity_number.astype(str)],sep='-')
 
+#In case of doubt, inspect the head of the DataFrame
+ent_client_head = ent_client.head(100)
 
-non_unique_entity_client = ent_client[ ent_client['unique_entities'].duplicated() ]
+
+non_unique_entity_client = ent_client[ ent_client['unique_entity_client'].duplicated() ]
 if non_unique_entity_client.shape[0] > 0:
-    warn('Non-unique combinations of entity and client have beeen detected')
+    warn('Non-unique combinations of entity and client have been detected')
     
-acc.client_number.value_counts().head()
-acc.account_number.value_counts().head()
-acc['unique_accounts'] = acc.client_number.astype(str).str.cat(
-    [acc.account_number.astype(str)],sep='-')
-acc.unique_accounts.value_counts().head()
+non_unique_acc = acc[ acc['account_number'].duplicated() ]
+if non_unique_acc.shape[0] > 0:
+    warn('Non-unique account numbers have been detected')
 
-non_unique_acc_client = acc[ acc['unique_accounts'].duplicated() ]
-if non_unique_acc_client.shape[0] > 0:
-    warn('Non-unique combinations of entity and client have beeen detected')
-
-
-##I'm not sure what these do, but I'll leave it
-non_unique_behavioural_risk = behavioural_risk[ behavioural_risk['unique_behavioural_risk'].duplicated() ]
+non_unique_behavioural_risk = behavioural_risk[ behavioural_risk['account_number'].duplicated() ]
 if non_unique_behavioural_risk.shape[0] > 0:
-    warn('Non-unique combinations of entity and client have beeen detected')
+    warn('Non-unique account numbers have been detected')
     
-non_unique_ent = ent[ ent['unique_ent'].duplicated() ]
+non_unique_ent = ent[ ent['entity_number'].duplicated() ]
 if non_unique_ent.shape[0] > 0:
-    warn('Non-unique combinations of entity and client have beeen detected')
+    warn('Non-unique entity numbers have been detected')
 
 
 ##Missing Values:
@@ -146,22 +139,6 @@ ent['date_of_birth'] = abs(ent['date_of_birth'])
 # =============================================================================
 ## ENTITY BEHAVIOURAL RISK
 #Determine entity risk
-
-client_size = ent_client.groupby('client_number').size().to_frame('client_size')
-
-#Add this to the dataframe (create a new one)
-df2 = ent_client.merge(client_size, left_on = 'client_number', right_index = True)
-
-#Compute inverses
-df2['weight_aux'] = 1/df2['client_size']
-
-#Now add all auxiliary weights to normalize
-weight_aux_sum = df2.groupby('client_number')['weight_aux'].sum(
-        ).to_frame('weight_aux_sum')
-
-#Add the column to the dataframe and compute final weight
-df2 = df2.merge(weight_aux_sum, left_on = 'client_number', right_index = True)
-df2['weight'] = df2['weight_aux']/df2['weight_aux_sum']
 
 #Determine a function to calculate the weighted holder mean:
 def weighted_holder(series, p=P, weight = None):
@@ -219,29 +196,64 @@ entity_behav_risk_df = entity_behav_risk_df[['entity_number','client_number',
                             'account_number','cluster','continuous_risk']]
     
 #entity_behav_risk_df.to_csv("entity_behavioral_risk.csv")
-holder = entity_behav_risk_df.groupby('entity_number')['continuous_risk'].agg(
-        weighted_holder)
+from functools import partial
 
-final = pd.merge(entity_behav_risk_df, holder, on='entity_number')
-final = final[['entity_number', 'continuous_risk_y', 'client_number', 
+weighted_holder_p = partial(weighted_holder, p=P)
+
+## Weighted_Holder average
+
+if WEIGHT_HOLDER_BOOL:
+    #TODO: compute the weight
+    acct_numb = ec_acc_df.drop(columns=['unique_entity_client']).groupby('entity_number').size().to_frame('number_of_accts')
+
+    #Add this to the dataframe (create a new one)
+    df2 = ec_acc_df.merge(acct_numb, left_on = 'entity_number', right_index = True)
+
+    #Compute inverses
+    df2['weight_aux'] = 1/df2['number_of_accts']
+
+    #Now add all auxiliary weights to normalize
+    weight_aux_sum = df2.groupby('account_number')['weight_aux'].sum(
+        ).to_frame('weight_aux_sum')
+
+    #Add the column to the dataframe and compute final weight
+    df2 = df2.merge(weight_aux_sum, left_on = 'account_number', right_index = True)
+    df2['weight'] = df2['weight_aux']/df2['weight_aux_sum']
+    
+else:
+    #TODO: the weight is equal to 1/n where n is the number of accounts the entity has
+    acct_numb = ec_acc_df.drop(columns=['unique_entity_client']).groupby('entity_number').size().to_frame('number_of_accts')
+
+    #Add this to the dataframe (create a new one)
+    df2 = ec_acc_df.merge(acct_numb, left_on = 'entity_number', right_index = True)
+    
+    #Compute inverses
+    df2['weight'] = 1/df2['number_of_accts']
+
+    
+entity_behav_risk_df['holder_aux'] = (
+    entity_behav_risk_df['weight'] * entity_behav_risk_df['continuous_risk']**P
+    )
+holder = entity_behav_risk_df.groupby('entity_number')['holder_aux'].sum()**(1/P)
+
+
+
+entity_behav_risk_final = pd.merge(entity_behav_risk_df, holder, on='entity_number')
+entity_behav_risk_final = entity_behav_risk_final[['entity_number', 'continuous_risk_y', 'client_number', 
                'account_number']].rename(columns={
                "continuous_risk_y":'continuous_risk'})
-print(final)
+print(entity_behav_risk_final.head(20))
 
-
-##Divide the file into 2: one for the private entities and the other for
-#the companies:
-
-final2 = pd.merge(final, ent, on='entity_number')
-final2 = final2[['entity_number', 'client_number','account_number',
-                 'continuous_risk','entity_type']]
+risk_with_ent_type = pd.merge(entity_behav_risk_final, ent, on='entity_number')
+risk_with_ent_type = risk_with_ent_type[['entity_number', 'client_number',
+                    'account_number','continuous_risk','entity_type']]
 
 
 #Accommodate for future immature values by determining if the account 
 #is tied to a private or enterprise, then assigning an average value for 
 #the risk based on if it is an enterprise or if it is private 
-ent_p = final2[final2.entity_type == 'P']
-ent_e = final2[final2.entity_type == 'E']
+ent_p = risk_with_ent_type[risk_with_ent_type.entity_type == 'P']
+ent_e = risk_with_ent_type[risk_with_ent_type.entity_type == 'E']
 
 for seg, behav_aux in ent_p.groupby('continuous_risk'):
         null_count = ( behav_aux.isnull().sum())
@@ -260,7 +272,9 @@ if n_missing > 0:
     warn("There are missing values in the table for private entities.")        
 ent_e.continuous_risk = ent_e.continuous_risk.fillna(ent_e.continuous_risk.mean())
 
-#Export them into 2 csv files
+
+##Divide the file into 2 csv files: one for the private entities and the other for
+#the companies:
 with open( os.path.join(TABLES, 'private_entity_model.csv'), 'w') as file:
     ent_p.to_csv(file, sep = ';')
 
