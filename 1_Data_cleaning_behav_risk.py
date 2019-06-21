@@ -64,85 +64,70 @@ with open(os.path.join(DATA, 'accounts.csv')) as file:
 with open(os.path.join(DATA, 'behavioural_risk.csv')) as file:
     behavioural_risk = pd.read_csv(file, sep=';')
     
-#TODO: Henrique -> it raises a warning convert_objects is deprecated.
-#Moreover, there is not gurantee the account_number is convertable to a number
-#so don't convert it
-behavioural_risk.convert_objects(convert_numeric=True)
-    
 with open(os.path.join(DATA, 'entity_client.csv')) as file:
     ent_client = pd.read_csv(file, sep=';')  
 
 #TODO: Henrique -> avoid leaving so many blank spaces, and try to be consistent
 # in the number of blank spaces you use. Also, why are you importing these tables?
 
-
 xls = pd.ExcelFile(os.path.join(DATA, 'Risk Tables.xlsx'))
-
 countrisk = pd.read_excel(xls, 'CountryRisk')
-
 compage = pd.read_excel(xls, 'CompanyAgeRisk')
+
 
 # =============================================================================
 ## DATA CLEANING
 
 ## Verify unique accounts - clearing duplicates
 
-#TODO: Henrique -> this lines don't not really do anything. You want this script
-#to run and report problems without you manually looking or doing anything
- 
-ent_client.client_number.value_counts().head()
-ent_client.entity_number.value_counts().head()
-ent_client['unique_entities'] = ent_client.client_number.astype(str).str.cat(
-    [ent_client.entity_number.astype(str)],sep='-')
-ent_client.unique_entities.value_counts().head()
-
-#TODO: Henrique -> how about this:
 non_unique_entity_client = ent_client[ ent_client['unique_entities'].duplicated() ]
 if non_unique_entity_client.shape[0] > 0:
     warn('Non-unique combinations of entity and client have beeen detected')
 
-#TODO: Henrique -> same as above: try the same approach
-acc.client_number.value_counts().head()
-acc.account_number.value_counts().head()
-acc['unique_accounts'] = acc.client_number.astype(str).str.cat(
-    [acc.account_number.astype(str)],sep='-')
-acc.unique_accounts.value_counts().head()
+non_unique_acc_client = acc[ acc['unique_accounts'].duplicated() ]
+if non_unique_acc_client.shape[0] > 0:
+    warn('Non-unique combinations of entity and client have beeen detected')
+
+non_unique_behavioural_risk = behavioural_risk[ behavioural_risk['unique_behavioural_risk'].duplicated() ]
+if non_unique_behavioural_risk.shape[0] > 0:
+    warn('Non-unique combinations of entity and client have beeen detected')
+    
+non_unique_ent = ent[ ent['unique_ent'].duplicated() ]
+if non_unique_ent.shape[0] > 0:
+    warn('Non-unique combinations of entity and client have beeen detected')
+
+non_countrisk = countrisk[ countrisk['unique_countrisk'].duplicated() ]
+if non_unique_countrisk.shape[0] > 0:
+    warn('Non-unique combinations of entity and client have beeen detected')
+
 
 #TODO: Henrique -> With pandas, it is better to do the following
 ent_client.drop('unique_entities', axis=1, inplace=True)
-##There are no duplicate values
-del ent_client["unique_entities"]
-del acc["unique_accounts"]
+acc.drop("unique_accounts", axis=1, inplace=True)
+behavioural_risk.drop("unique_behavioural_risk", axis=1, inplace=True)
+ent.drop("unique_ent", axis=1, inplace=True)
+countrisk.drop("unique_countrisk", axis=1, inplace=True)
+
 
 ## Fill NA
-#TODO: Henrique -> Is there anything to fill? It could be a good idea to print
-#the number of null values you are filling and what the mean is
-#moreover, if you are really  doing this, you should fill by E and P
-#since there are no missing values and we don't have much time, you can leave
-#the code filling with the mean but just put a comment so the next person to
-#read the code will know what the improvment needs to be.
+
 behavioural_risk.continuous_risk = behavioural_risk.continuous_risk.fillna(behavioural_risk.continuous_risk.mean())
 behavioural_risk.discrete_risk = behavioural_risk.discrete_risk.fillna(behavioural_risk.discrete_risk.mean())
 
-#TODO: Henrique -> Again, it is not printing anything. If you want to raise
-#a warning in the case of duplicates, use the approach I sugested above.
-## Checking duplicates in this 
-behavioural_risk.shape
-behavioural_risk[behavioural_risk.duplicated()].shape
-behavioural_risk.shape
+#If there are null values in the future, an improvement to the code needs to 
+#be made where we are filling the null values based off the mean values if it is
+#empresas or particulares. fill in with the means of those E and P values.
 
-ent.shape
-ent[ent.duplicated()].shape
-ent.shape
-
+#TODO: Not sure what this is for but kept in ~Lara
 ent_client[ent_client.duplicated()].shape
-
 countrisk[countrisk.duplicated()].shape
+
+# =============================================================================
 
 ##Data Quality Assurance
 
 #TODO: Henrique -> Again, what is the purpose of these lines without a print?
-print(ent.date_of_birth.value_counts().head())
+print( ent.date_of_birth.value_counts().head() )
 #some of the values have a "0" birthdate.
 
 ent.sort_values(by = "date_of_birth").head(10)
@@ -151,23 +136,23 @@ ent.loc[(ent['date_of_birth'] == 0) & (ent["entity_type"] != "P")].shape
 ent.loc[(ent['date_of_birth'] == 0) & (ent["entity_type"] == "P")].shape
 ent.loc[(ent['date_of_birth'] < 0)]
 
-#TODO: Henrique -> don't use """ for multiple line comments. Use multiple # instead
-"""
-Here we split the data set into two dataframe by entity_type
-This will lower the amount of null values in the data frame because not all of 
-the columns are applicable to both "E" and "P" entities. They were then saved
-as .csv files.
-"""
+
+#Here we split the data set into two dataframe by entity_type
+#This will lower the amount of null values in the data frame because not all of 
+#the columns are applicable to both "E" and "P" entities. They were then saved
+#as .csv files.
+
 
 #TODO: Henrique -> This object is never used!
-ent_by_type = ent.groupby("entity_type")
+#ent_by_type = ent.groupby("entity_type")
+
 
 #TODO: Henrique -> Again, you are assuming someone is going to run this line
 #by line. You should either print, warn or raise an exception when you want
 #to ask the attention of the person running the code.
 
 ent_p = ent.loc[ent["entity_type"] == "P"]
-ent_p.isnull().sum()
+print( ent_p.isnull().sum() )
 ent_p.drop(["company_age_risk", "economic_activity_code_risk",
             "society_type_risk"], axis = 1).head()
 
@@ -185,9 +170,10 @@ ent_e.drop(["nationality_risk", "occupation_risk", "qualifications_risk",
 #you can do this by using the .drop(column_list, axis=1, inplace=True)
 with open( os.path.join(TABLES, 'private_entity_model.csv')) as file:
     ent_p.to_csv(file, sep = ';')
+    
+with open( os.path.join(TABLES, 'enterprise_entity_model.csv')) as file:
+    ent_e.to_csv(file, sep = ';')
 
-ent_p.to_csv("particulares.csv")
-ent_e.to_csv("empresas.csv")
 
 #TODO: Henrique -> Do this before you export the datataset, so that the 
 #private and company model csv have the risk variable ready for the model
@@ -250,7 +236,6 @@ df2['weight'] = df2['weight_aux']/df2['weight_aux_sum']
 def weighted_holder(series, p=P, weight = None):
     """
     Function to compute the weighted Holder average
-    #TODO: complete this docstring
 
     Arguments:
 
