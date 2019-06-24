@@ -214,11 +214,9 @@ entity_behav_risk_df2['holder_aux'] = (
 holder = entity_behav_risk_df2.groupby('entity_number')['holder_aux'].sum()**(1/P)
 
 
-#TODO: Henrique -> You must convert holder to a DataFrame and merge with 
-#left_index = 'entity_number', right_index = True since objects created 
-#with group by have the grouped column as the index. Use .to_frame above
+holder_df= pd.DataFrame(holder)
 entity_behav_risk_final = pd.merge(
-        entity_behav_risk_df2, holder, left_on='entity_number', right_index=True
+        entity_behav_risk_df2, holder_df, left_on='entity_number', right_index=True
         )
 
 #TODO: I'm not sure which one is the right holder_aux (holder_aux_y or horler_aux_x) (Joëlle)
@@ -227,21 +225,13 @@ entity_behav_risk_final = entity_behav_risk_final[['entity_number', 'client_numb
                "holder_aux_y":'holder_aux'})
 entity_behav_risk_final = entity_behav_risk_final.drop_duplicates('entity_number')
 
-#TODO: Henrique -> if you just want some columns there is no point in joining 
-#the entire ent DataFrame  
-#I think you also want the risk predictor columns 
 risk_with_ent_type = pd.merge(entity_behav_risk_final, ent[['entity_type', 'entity_number']],
                               on='entity_number')
-
-
-
 
 #Accommodate for future immature values by determining if the account 
 #is tied to a private or enterprise, then assigning an average value for 
 #the risk based on if it is an enterprise or if it is private 
 
-#TODO: Henrique -> If we export this, we dropped the risk values 
-#so how will we run our model? We have no predictor variables :P
 ent_p = risk_with_ent_type[risk_with_ent_type.entity_type == 'P']
 ent_e = risk_with_ent_type[risk_with_ent_type.entity_type == 'E']
 
@@ -255,18 +245,6 @@ with open( os.path.join(TABLES, 'enterprise_entity_model.csv'), 'w') as file:
     ent_e.to_csv(file, sep = ';')
 
 # =============================================================================
-
-#Check if it is correct (manually for 1 or 2 cases - it will also help
-#you to get a feel of the impact of the choice of p)
-#49994 entity
-ent_49994 = np.sqrt((0.119944**2)/2) #correct
-
-#50000
-ent_50000 = np.sqrt((0.081082**2)/2) #correct
-
-#9:
-ent_9 = np.sqrt((0.081082**2)/2) #correct
-
 
 
 
