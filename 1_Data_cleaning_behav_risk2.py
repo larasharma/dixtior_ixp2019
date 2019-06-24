@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Mon Jun 24 11:24:17 2019
+
+@author: brandon
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Jun 21 11:11:23 2019
 
 Determines the behavioural risk of entities using the weighted holder average.
@@ -94,9 +102,8 @@ if non_unique_ent.shape[0] > 0:
 
 
 ##Missing Values:
-#TODO: Henrique -> Why are you creating a function and fixing n_records outside?
-n_records = len(ent)
 def missing_values_df(df):
+    n_records = len(ent)
     for column in df:
         print("{} | {} | {}".format(
             column, len(df[df[column].isnull()]) / (1.0*n_records), df[column].dtype
@@ -116,29 +123,24 @@ missing_values_df(ent)
 
 ##Data Quality Assurance
 
-#TODO: Henrique -> Maybe you should also print the meaning of what you are 
-# showing as in the example I made bellow - also no need to use loc
-#Also make sure you need all these prints. Simple is better than complicated 
 n_ent_zero_birthdate = ent[(ent['date_of_birth'] == 0)].shape[0]
 print('There are %d entities with "0" birthdate ' % n_ent_zero_birthdate )
 
-print( ent.date_of_birth.value_counts() )
-#Some of the values have a "0" birthdate.
-
-#How many entities have a birthdate of 0?
-print(ent.loc[(ent['date_of_birth'] == 0)].shape)
 
 #How many enterprise entities have a birthdate of 0? 
 #These make sense, companies do not have birthdates
-print(ent.loc[(ent['date_of_birth'] == 0) & (ent["entity_type"] != "P")].shape)
+empresas_birthdate = ent[(ent['date_of_birth'] == 0) & (ent["entity_type"] != "P")].shape[0]
+print('There are %d enterprises with "0" birthdate' % empresas_birthdate )
 
 #How many private entities have a birthdate of 0? 
 #These do not make sense -- people have birth dates and this is important 
 #information. These age risks should be flagged as 5 or removed from the data set
-print(ent.loc[(ent['date_of_birth'] == 0) & (ent["entity_type"] == "P")].shape)
+particulares_birthdate = ent[(ent['date_of_birth'] == 0) & (ent["entity_type"] == "P")].shape[0]
+print('There are %d private customers with "0" birthdate' % particulares_birthdate)
 
 #We see that there are values with date of birth <0 as well
-print(ent.loc[(ent['date_of_birth'] < 0)])
+negative_birthdate = ent[(ent['date_of_birth'] < 0)].shape[0]
+print('There are %d entities with negative birthdate' % negative_birthdate)
 
 #Remove the private entities with 0 as date of birth
 ent = ent[~((ent.entity_type == 'P') & ((ent.date_of_birth ==0)))]
@@ -164,7 +166,7 @@ entity_behav_risk_df = pd.merge(behavioural_risk, ec_acc_df, left_on="account_nu
 #Reordering the columns
 entity_behav_risk_df = entity_behav_risk_df[['entity_number','client_number',
                             'account_number','cluster','continuous_risk']]
-    
+     
 
 ## Weighted_Holder average
 
