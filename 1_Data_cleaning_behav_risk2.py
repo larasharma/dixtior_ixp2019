@@ -1,21 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jun 24 11:24:17 2019
-
-@author: brandon
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
 Created on Fri Jun 21 11:11:23 2019
 
 Determines the behavioural risk of entities using the weighted holder average.
 
 @author: brandon
 """
-
 
 import os, sys
 
@@ -48,7 +39,6 @@ for path in PATH_TO_APPEND_LIST:
 #IMPORTS - PYTHON MODULES
         
 import pandas as pd
-import numpy as np
 from warnings import warn
 
 #User defined constants
@@ -92,7 +82,8 @@ non_unique_acc = acc[ acc['account_number'].duplicated() ]
 if non_unique_acc.shape[0] > 0:
     warn('Non-unique account numbers have been detected')
 
-non_unique_behavioural_risk = behavioural_risk[ behavioural_risk['account_number'].duplicated() ]
+non_unique_behavioural_risk = behavioural_risk[ 
+        behavioural_risk['account_number'].duplicated() ]
 if non_unique_behavioural_risk.shape[0] > 0:
     warn('Non-unique account numbers have been detected')
     
@@ -106,7 +97,8 @@ def missing_values_df(df):
     n_records = len(ent)
     for column in df:
         print("{} | {} | {}".format(
-            column, len(df[df[column].isnull()]) / (1.0*n_records), df[column].dtype
+            column, len(df[df[column].isnull()]) / (1.0*n_records),
+            df[column].dtype
         ))
 
 missing_values_df(ent)
@@ -129,13 +121,15 @@ print('There are %d entities with "0" birthdate ' % n_ent_zero_birthdate )
 
 #How many enterprise entities have a birthdate of 0? 
 #These make sense, companies do not have birthdates
-empresas_birthdate = ent[(ent['date_of_birth'] == 0) & (ent["entity_type"] != "P")].shape[0]
+empresas_birthdate = ent[(ent['date_of_birth'] == 0) & 
+                         (ent["entity_type"] != "P")].shape[0]
 print('There are %d enterprises with "0" birthdate' % empresas_birthdate )
 
 #How many private entities have a birthdate of 0? 
 #These do not make sense -- people have birth dates and this is important 
 #information. These age risks should be flagged as 5 or removed from the data set
-particulares_birthdate = ent[(ent['date_of_birth'] == 0) & (ent["entity_type"] == "P")].shape[0]
+particulares_birthdate = ent[(ent['date_of_birth'] == 0) 
+& (ent["entity_type"] == "P")].shape[0]
 print('There are %d private customers with "0" birthdate' % particulares_birthdate)
 
 #We see that there are values with date of birth <0 as well
@@ -160,22 +154,19 @@ ec_acc_df = pd.merge(ent_client,acc, left_on="client_number",
                      right_on="client_number")
 
 #Creating one large dataset connecting entity number to behavioral risk
-entity_behav_risk_df = pd.merge(behavioural_risk, ec_acc_df, left_on="account_number", 
+entity_behav_risk_df = pd.merge(behavioural_risk, ec_acc_df, 
+                                left_on="account_number", 
                                 right_on="account_number", how='inner')
 
 #Reordering the columns
 entity_behav_risk_df = entity_behav_risk_df[['entity_number','client_number',
                             'account_number','cluster','continuous_risk']]
      
-
 ## Weighted_Holder average
-
-#TODO: not really a TODO, I changed the code to accouts instead of clients but
-#I was confused. Now I put the way it should be.
-
 if WEIGHTED_HOLDER_BOOL:
     #Compute how many entities in each client
-    client_size = ent_client.groupby('client_number').size().to_frame('client_size')
+    client_size = ent_client.groupby('client_number').size().to_frame(
+            'client_size')
     #Add this to the entity_behav_risk_df dataframe
     entity_behav_risk_df2 = entity_behav_risk_df.merge(
             client_size, left_on = 'client_number', right_index = True
@@ -190,11 +181,12 @@ if WEIGHTED_HOLDER_BOOL:
             weight_aux_sum, left_on = 'client_number', right_index = True
             )
     entity_behav_risk_df2['weight'] = (
-            entity_behav_risk_df2['weight_aux']/entity_behav_risk_df2['weight_aux_sum']
+    entity_behav_risk_df2['weight_aux']/entity_behav_risk_df2['weight_aux_sum']
             )    
 else:
     #The weight is equal to 1/n where n is the number of accounts the entity has
-    acct_numb = ec_acc_df.drop(['unique_entity_client'], axis=1).groupby('entity_number').size().to_frame('number_of_accts')
+    acct_numb = ec_acc_df.drop(['unique_entity_client'], 
+            axis=1).groupby('entity_number').size().to_frame('number_of_accts')
 
     #Add this to the dataframe (create a new one)
     entity_behav_risk_df2 = entity_behav_risk_df.merge(
@@ -216,17 +208,17 @@ holder = entity_behav_risk_df2.groupby('entity_number')['holder_aux'].sum()**(1/
 
 holder_df= pd.DataFrame(holder)
 entity_behav_risk_final = pd.merge(
-        entity_behav_risk_df2, holder_df, left_on='entity_number', right_index=True
-        )
+        entity_behav_risk_df2, holder_df, left_on='entity_number', 
+        right_index=True)
 
 #TODO: I'm not sure which one is the right holder_aux (holder_aux_y or horler_aux_x) (Joëlle)
-entity_behav_risk_final = entity_behav_risk_final[['entity_number', 'client_number', 
-               'account_number', 'holder_aux_y']].rename(columns={
-               "holder_aux_y":'holder_aux'})
+entity_behav_risk_final = entity_behav_risk_final[['entity_number', 
+               'client_number', 'account_number', 
+               'holder_aux_y']].rename(columns={ "holder_aux_y":'holder_aux'})
 entity_behav_risk_final = entity_behav_risk_final.drop_duplicates('entity_number')
 
-risk_with_ent_type = pd.merge(entity_behav_risk_final, ent[['entity_type', 'entity_number']],
-                              on='entity_number')
+risk_with_ent_type = pd.merge(entity_behav_risk_final, ent[['entity_type', 
+                             'entity_number']], on='entity_number')
 
 #Accommodate for future immature values by determining if the account 
 #is tied to a private or enterprise, then assigning an average value for 
