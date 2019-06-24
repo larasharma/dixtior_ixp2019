@@ -5,7 +5,7 @@ Created on Fri Jun 21 11:11:23 2019
 
 Determines the behavioural risk of entities using the weighted holder average.
 
-@author: brandon
+@authors: Grace, Lara, Joëlle
 """
 
 import os, sys
