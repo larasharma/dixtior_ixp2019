@@ -39,10 +39,13 @@ for path in PATH_TO_APPEND_LIST:
 #IMPORTS - PYTHON MODULES
         
 import pandas as pd
+import numpy as np
 from warnings import warn
 
 #User defined constants
-from constants import DATA, TABLES, P, WEIGHTED_HOLDER_BOOL, MODEL_VARIABLES_DICT
+from constants import DATA, TABLES, P, WEIGHTED_HOLDER_BOOL, MODEL_VARIABLES_DICT, BEHAVIOURAL_BOUNDARY
+
+from weights_and_limits import BEHAVIOURAL_RISK_LIMITS, ACCEPTANCE_RISK_LIMITS
 
 # =============================================================================
 #IMPORTS 
@@ -201,6 +204,7 @@ entity_behav_risk_df2['holder_aux'] = (
     )
 holder = entity_behav_risk_df2.groupby('entity_number')['holder_aux'].sum()**(1/P)
 holder_df = holder.to_frame('behavioural_risk')
+holder_df['BC_bhv'] = holder_df['behavioural_risk']>BEHAVIOURAL_BOUNDARY
 
 entity_behav_risk_final = pd.merge(
         ent, holder_df, left_on='entity_number', 
@@ -214,8 +218,8 @@ duplicates = entity_behav_risk_final[entity_behav_risk_final.duplicated()].shape
 if duplicates[0] != 0:
     warn ('There are duplicate values in the final dataset')
 
-columns_in_both = ['entity_number', 'entity_type'
-                   ]
+columns_in_both = ['entity_number', 'entity_type', 'behavioural_risk', 'reg', 
+                   'BC_reg', 'BC_bhv']
 
 columns_p = columns_in_both + MODEL_VARIABLES_DICT['P']
 columns_e = columns_in_both + MODEL_VARIABLES_DICT['E']
@@ -245,6 +249,71 @@ with open( os.path.join(TABLES, 'enterprise_entity_model.csv'), 'w') as file:
 
 # =============================================================================
 
+df_aux = entity_behav_risk_final['reg'].copy().to_frame()
+df_aux['d_reg'] = np.digitize(df_aux['reg'], [0] + BEHAVIOURAL_RISK_LIMITS + [1] )
+
+
+def reg_merge( df_aux, risk_limits, string, minimum, maximum ):
+    cutoffs = [minimum] + risk_limits + [maximum]
+    cutoffs_aux = [ (cutoffs[i], cutoffs[i+1]) for i in range (len(cutoffs) - 1 ) ]
+    boundaries = pd.DataFrame( cutoffs_aux, columns = [string + '_lower', string + '_upper'] )
+    boundaries['d_reg'] = np.arange( boundaries.shape[0] ) + 1
+    merged = pd.merge( df_aux, boundaries, left_on = 'd_reg', right_on = 'd_reg',
+                         how = 'left' )
+    return merged
+
+
+dreg_merge = reg_merge( df_aux, BEHAVIOURAL_RISK_LIMITS, 'R', 0, 1 )
+dreg_merge = reg_merge( dreg_merge, ACCEPTANCE_RISK_LIMITS, 'B', 0, 1 )
+
+
+R_delta_name = "R_delta"
+y_name = 'y' 
+
+
+dreg_merge[R_delta_name] = (dreg_merge.reg - dreg_merge.R_lower) / (dreg_merge.R_upper - dreg_merge.R_lower)
+dreg_merge[y_name] = (dreg_merge.B_lower) + dreg_merge[R_delta_name]*(dreg_merge.B_upper - dreg_merge.B_lower)
+
+# =============================================================================
+# merging dreg_merge with ent-e and ent-p with reg column
+
+
+#ent_e = ent_e.merge(dreg_merge, on ='reg')
+
+
+
+
+
+
+
+
+
+# =============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ============================================================================
+
+
+#df_aux['d_reg'] = 5
+#df_aux['d_reg'] = np.where(entity_behav_risk_final['reg']<=0.8, 
+                       #4, entity_behav_risk_final['reg'])
+#df_aux['d_reg'] = np.where(entity_behav_risk_final['reg']<=0.6, 
+                       #3, entity_behav_risk_final['reg'])
+#df_aux['d_reg'] = np.where(entity_behav_risk_final['reg']<=0.4,
+                      #2, entity_behav_risk_final['reg'])
+#df_aux['d_reg'] = np.where(entity_behav_risk_final['reg']<=0.2, 
+                       #1, entity_behav_risk_final['reg'])
 
 
 
