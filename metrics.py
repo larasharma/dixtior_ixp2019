@@ -38,6 +38,8 @@ for path in PATH_TO_APPEND_LIST:
         
 import pandas as pd
 from warnings import warn
+import scikit-learn as sklearn
+#may need to import more things from sklearn. Not sure why sklearn will not import
 
 #User defined constants
 from constants import DATA, TABLES, P, WEIGHTED_HOLDER_BOOL, MODEL_VARIABLES_DICT
