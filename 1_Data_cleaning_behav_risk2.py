@@ -40,6 +40,7 @@ for path in PATH_TO_APPEND_LIST:
         
 import pandas as pd
 import numpy as np
+from sklearn.linear_model import LinearRegression
 from warnings import warn
 
 #User defined constants
@@ -289,12 +290,33 @@ dreg_merge[y_name] = (dreg_merge.B_lower) + dreg_merge[R_delta_name]*(dreg_merge
 
 
 # =============================================================================
+## Check with Henrique and Miguel:
 
 
 
+## Linear regression for the empresas
+independent_variables = ent_e[['economic_activity_code_risk',
+               'society_type_risk', 'country_of_residence_risk']]
+target_variable = ent_e['behavioural_risk']
+
+model = LinearRegression()
+model.fit(X=independent_variables, y=target_variable)
+predictions = model.predict(independent_variables)
+
+model.intercept_
+model.coef_
+
+## Linear regression for the particulares
+independent_variables_p = ent_p[['age_risk', 'nationality_risk', 'occupation_risk', 
+               'qualifications_risk', 'country_of_residence_risk']]
+target_variable_p = ent_p['behavioural_risk']
 
 
+model.fit(X=independent_variables_p, y=target_variable_p)
+predictions = model.predict(independent_variables_p)
 
+model.intercept_
+model.coef_
 
 
 
