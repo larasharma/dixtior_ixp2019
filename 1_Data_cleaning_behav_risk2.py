@@ -242,15 +242,11 @@ for df in [ent_e, ent_p]:
 
 ##Divide the file into 2 csv files: one for the private entities and the other for
 #the companies:
-with open( os.path.join(TABLES, 'private_entity_model.csv'), 'w') as file:
-    ent_p.to_csv(file, sep = ';')
 
-with open( os.path.join(TABLES, 'enterprise_entity_model.csv'), 'w') as file:
-    ent_e.to_csv(file, sep = ';')
 
 # =============================================================================
 
-df_aux = entity_behav_risk_final['reg'].copy().to_frame()
+df_aux = entity_behav_risk_final[ ['entity_number', 'reg'] ].copy()
 df_aux['d_reg'] = np.digitize(df_aux['reg'], [0] + BEHAVIOURAL_RISK_LIMITS + [1] )
 
 
@@ -264,12 +260,14 @@ def reg_merge( df_aux, risk_limits, string, minimum, maximum ):
     return merged
 
 
-dreg_merge = reg_merge( df_aux, BEHAVIOURAL_RISK_LIMITS, 'R', 0, 1 )
-dreg_merge = reg_merge( dreg_merge, ACCEPTANCE_RISK_LIMITS, 'B', 0, 1 )
+dreg_merge = reg_merge( df_aux, BEHAVIOURAL_RISK_LIMITS, 'B', 0, 1 )
+print(dreg_merge.columns)
 
+dreg_merge = reg_merge( dreg_merge, ACCEPTANCE_RISK_LIMITS, 'R', 0, 1 )
+print(dreg_merge.columns)
 
 R_delta_name = "R_delta"
-y_name = 'y' 
+y_name = 'predicted_behavioural_risk' 
 
 
 dreg_merge[R_delta_name] = (dreg_merge.reg - dreg_merge.R_lower) / (dreg_merge.R_upper - dreg_merge.R_lower)
@@ -278,13 +276,36 @@ dreg_merge[y_name] = (dreg_merge.B_lower) + dreg_merge[R_delta_name]*(dreg_merge
 # =============================================================================
 # merging dreg_merge with ent-e and ent-p with reg column
 
-
-#ent_e = ent_e.merge(dreg_merge, on ='reg')
-
-
+#ent_e['reg'].duplicated().sum()
+#dreg_merge['reg'].duplicated().sum()
 
 
+#ent_e_right = ent_e.merge(dreg_merge, on ='reg', how= 'right').shape[0]
+#ent_e_left = ent_e.merge(dreg_merge, on='reg', how='left').shape[0]
+#ent_e_inner = ent_e.merge(dreg_merge, on='reg', how='inner').shape[0]
+#ent_e_outer = ent_e.merge(dreg_merge, on='reg', how='outer').shape[0]
 
+
+
+
+ent_e2 = ent_e.drop(['reg'], axis = 1).merge(dreg_merge.drop(
+        ['R_lower', 'R_upper', 'B_lower', 'B_upper', 'R_delta'], axis = 1 
+        ), on ='entity_number')
+
+
+ent_p2 = ent_p.drop(['reg'], axis = 1).merge(dreg_merge.drop(
+        ['R_lower', 'R_upper', 'B_lower', 'B_upper', 'R_delta'], axis = 1 
+        ), on ='entity_number')
+
+assert ent_e2['entity_number'].duplicated().sum() == 0
+assert ent_p2['entity_number'].duplicated().sum() == 0
+
+
+with open( os.path.join(TABLES, 'private_entity_model.csv'), 'w') as file:
+    ent_p2.to_csv(file, index = False, sep = ';')
+
+with open( os.path.join(TABLES, 'enterprise_entity_model.csv'), 'w') as file:
+    ent_e2.to_csv(file, index = False, sep = ';')
 
 
 
@@ -295,28 +316,28 @@ dreg_merge[y_name] = (dreg_merge.B_lower) + dreg_merge[R_delta_name]*(dreg_merge
 
 
 ## Linear regression for the empresas
-independent_variables = ent_e[['economic_activity_code_risk',
-               'society_type_risk', 'country_of_residence_risk']]
-target_variable = ent_e['behavioural_risk']
+#independent_variables = ent_e[['economic_activity_code_risk',
+               #'society_type_risk', 'country_of_residence_risk']]
+#target_variable = ent_e['behavioural_risk']
 
-model = LinearRegression()
-model.fit(X=independent_variables, y=target_variable)
-predictions = model.predict(independent_variables)
+#model = LinearRegression()
+#model.fit(X=independent_variables, y=target_variable)
+#predictions = model.predict(independent_variables)
 
-model.intercept_
-model.coef_
+#model.intercept_
+#model.coef_
 
 ## Linear regression for the particulares
-independent_variables_p = ent_p[['age_risk', 'nationality_risk', 'occupation_risk', 
-               'qualifications_risk', 'country_of_residence_risk']]
-target_variable_p = ent_p['behavioural_risk']
+#independent_variables_p = ent_p[['age_risk', 'nationality_risk', 'occupation_risk', 
+               #'qualifications_risk', 'country_of_residence_risk']]
+#target_variable_p = ent_p['behavioural_risk']
 
 
-model.fit(X=independent_variables_p, y=target_variable_p)
-predictions = model.predict(independent_variables_p)
+#model.fit(X=independent_variables_p, y=target_variable_p)
+#predictions = model.predict(independent_variables_p)
 
-model.intercept_
-model.coef_
+#model.intercept_
+#model.coef_
 
 
 
