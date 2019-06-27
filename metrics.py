@@ -38,42 +38,67 @@ for path in PATH_TO_APPEND_LIST:
         
 import pandas as pd
 from warnings import warn
-import scikit-learn as sklearn
+from sklearn import metrics
 #may need to import more things from sklearn. Not sure why sklearn will not import
 
 #User defined constants
-from constants import DATA, TABLES, P, WEIGHTED_HOLDER_BOOL, MODEL_VARIABLES_DICT
+from constants import DATA, TABLES
 # =============================================================================
 #IMPORT DATA
 
 #for the regression metrics
-with open(os.path.join(DATA, #'regression.csv')) as file:
-    ent = pd.read_csv(file, sep=';')
+#with open(os.path.join(DATA, #'regression.csv')) as file:
+#    ent = pd.read_csv(file, sep=';')
     
 #For the classification metrics
-with open(os.path.join(DATA, #'BC_var.csv')) as file:
-    ent = pd.read_csv(file, sep=';')
+#with open(os.path.join(DATA, #'BC_var.csv')) as file:
+#    ent = pd.read_csv(file, sep=';')
+
+#XXX: replace this with csv 
+df = entity_behav_risk_final
+
 # =============================================================================
 #Regression metrics
 
-evs = metrics.explained_variance_score(y_true, y_pred)
-maxe = metrics.max_error(y_true, y_pred)
-mae = metrics.mean_absolute_error(y_true, y_pred)
-mse = metrics.mean_squared_error(y_true, y_pred[, …])
-msle = metrics.mean_squared_log_error(y_true, y_pred)
-medae = metrics.median_absolute_error(y_true, y_pred)
-r2 = metrics.r2_score(y_true, y_pred[, …])
+y_true = df.behavioural_risk
+y_pred = df.reg
+
+regression_dict = {}
+regression_dict['explained_variance_score'] = metrics.explained_variance_score(y_true, y_pred)
+regression_dict['max_error'] = metrics.max_error(y_true, y_pred)
+regression_dict['mean_absolute_error'] = metrics.mean_absolute_error(y_true, y_pred)
+regression_dict['mean_squared_error'] = metrics.mean_squared_error(y_true, y_pred)
+regression_dict['mean_squared_log_error'] = metrics.mean_squared_log_error(y_true, y_pred)
+regression_dict['median_absolute_error'] = metrics.median_absolute_error(y_true, y_pred)
+regression_dict['r2'] = metrics.r2_score(y_true, y_pred)
 
 #create DataFrame
+regression_metrics = df.from_dict(regression_dict, orient = 'index')
+
 # =============================================================================
 #Classification metrics
-acc_score = metrics.accuracy_score(y_true, y_pred[, …])
-auc = metrics.auc(x, y[, reorder])
-avg_ps = metrics.average_precision_score(y_true, y_score)
-c_matrix = metrics.confusion_matrix(y_true, y_pred[, …])
-f1 = metrics.f1_score(y_true, y_pred[, labels, …])
-prec_score = metrics.precision_score(y_true, y_pred[, …])
-recall_score = metrics.recall_score(y_true, y_pred[, …])
-roc_auc = metrics.roc_auc_score(y_true, y_score[, …])
-roc_curve = metrics.roc_curve(y_true, y_score[, …])
+y_true = df.BC_bhv
+y_pred = df.BC_reg
+
+classification_dict = {}
+classification_dict['accuracy_score'] = metrics.accuracy_score(y_true, y_pred)
+#classification_dict['avg_ps'] = metrics.average_precision_score(y_true, y_score)
+classification_dict['confusion_matrix'] = metrics.confusion_matrix(y_true, y_pred)
+classification_dict['f1_score'] = metrics.f1_score(y_true, y_pred)
+classification_dict['precision_score'] = metrics.precision_score(y_true, y_pred)
+classification_dict['recall_score'] = metrics.recall_score(y_true, y_pred)
+classification_dict['roc_auc_score'] = metrics.roc_auc_score(y_true, y_pred)
+#classification_dict['roc_curve'] = metrics.roc_curve(y_true, y_score)
+classification_dict['gini'] = 2*classification_dict['roc_auc_score']-1
+classification_dict['sensibility'] = classification_dict['confusion_matrix'][1,1]/sum(classification_dict['confusion_matrix'][1,:])
+classification_dict['specificity'] = classification_dict['confusion_matrix'][0,0]/sum(classification_dict['confusion_matrix'][0,:])
+
 #create DataFrame
+classification_metrics = df.from_dict(classification_dict, orient = 'index')
+# =============================================================================
+print(classification_metrics)
+print(regression_metrics)
+
+#Export to excel
+#pd.regression_metrics.to_excel
+# =============================================================================
