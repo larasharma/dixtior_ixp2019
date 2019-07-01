@@ -54,9 +54,8 @@ for seg_name in ['private', 'enterprise']:
             df.behavioural_risk, df.predicted_behavioural_risk, df.BC_bhv, df.BC_reg
             )
     #Export to excel
-    with ExcelWriter("1_Data_Files/Metrics.xlsx") as writer:
+    #writer = pd.ExcelWriter("1_Data_Files/Metrics.xlsx", engine = xlsxwriter)
+    with pd.ExcelWriter("1_Data_Files/Metrics.xlsx") as writer:
         regression_metrics.to_excel(writer, sheet_name = "Linear Regression" )
         classification_metrics.to_excel(writer, sheet_name = "Classification")
-        
-        
     # =============================================================================
