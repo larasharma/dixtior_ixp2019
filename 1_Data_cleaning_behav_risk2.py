@@ -306,36 +306,6 @@ with open( os.path.join(TABLES, 'enterprise_entity_model.csv'), 'w') as file:
     ent_e2.to_csv(file, index = False, sep = ';')
 
 
-# =============================================================================
-## Check with Henrique and Miguel:
-
-## Linear regression for the empresas
-independent_variables_e = ent_e2[['economic_activity_code_risk',
-               'society_type_risk', 'country_of_residence_risk']].values
-target_variable = ent_e2['behavioural_risk'].values
-
-model = LinearRegression()
-model.fit(X=independent_variables_e, y=target_variable)
-predictions_E = model.predict(independent_variables_e) 
-predictions_E = pd.Series(predictions_E )
-
-model.intercept_
-coefs_E = model.coef_
-
-## Linear regression for the particulares
-independent_variables_p = ent_p2[['age_risk', 'nationality_risk', 'occupation_risk', 
-               'qualifications_risk', 'country_of_residence_risk']].values
-target_variable_p = ent_p2['behavioural_risk'].values
-
-
-model.fit(X=independent_variables_p, y=target_variable_p)
-predictions_P =  model.predict(independent_variables_p) 
-predictions_P = pd.Series(predictions_P )
-
-
-model.intercept_
-coefs_P = model.coef_
-
 # ============================================================================
 
 
