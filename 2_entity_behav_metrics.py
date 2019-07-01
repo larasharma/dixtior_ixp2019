@@ -43,62 +43,20 @@ from sklearn import metrics
 
 #User defined constants
 from constants import DATA, TABLES
+from general_utils import compute_metrics
+# =============================================================================
 # =============================================================================
 #IMPORT DATA
-
-#for the regression metrics
-#with open(os.path.join(DATA, #'regression.csv')) as file:
-#    ent = pd.read_csv(file, sep=';')
+for seg_name in ['private', 'enterprise']: 
+    print('-' *50, '\n', seg_name, '\n')
+    #for the regression metrics
+    with open(os.path.join(TABLES, '%s_entity_model.csv'%seg_name)) as file:
+        df = pd.read_csv(file, sep=';')
     
-#For the classification metrics
-#with open(os.path.join(DATA, #'BC_var.csv')) as file:
-#    ent = pd.read_csv(file, sep=';')
-
-#XXX: replace this with csv 
-df = entity_behav_risk_final
-
-# =============================================================================
-#Regression metrics
-
-y_true = df.behavioural_risk
-y_pred = df.reg
-
-regression_dict = {}
-regression_dict['explained_variance_score'] = metrics.explained_variance_score(y_true, y_pred)
-regression_dict['max_error'] = metrics.max_error(y_true, y_pred)
-regression_dict['mean_absolute_error'] = metrics.mean_absolute_error(y_true, y_pred)
-regression_dict['mean_squared_error'] = metrics.mean_squared_error(y_true, y_pred)
-regression_dict['mean_squared_log_error'] = metrics.mean_squared_log_error(y_true, y_pred)
-regression_dict['median_absolute_error'] = metrics.median_absolute_error(y_true, y_pred)
-regression_dict['r2'] = metrics.r2_score(y_true, y_pred)
-
-#create DataFrame
-regression_metrics = df.from_dict(regression_dict, orient = 'index')
-
-# =============================================================================
-#Classification metrics
-y_true = df.BC_bhv
-y_pred = df.BC_reg
-
-classification_dict = {}
-classification_dict['accuracy_score'] = metrics.accuracy_score(y_true, y_pred)
-#classification_dict['avg_ps'] = metrics.average_precision_score(y_true, y_score)
-classification_dict['confusion_matrix'] = metrics.confusion_matrix(y_true, y_pred)
-classification_dict['f1_score'] = metrics.f1_score(y_true, y_pred)
-classification_dict['precision_score'] = metrics.precision_score(y_true, y_pred)
-classification_dict['recall_score'] = metrics.recall_score(y_true, y_pred)
-classification_dict['roc_auc_score'] = metrics.roc_auc_score(y_true, y_pred)
-#classification_dict['roc_curve'] = metrics.roc_curve(y_true, y_score)
-classification_dict['gini'] = 2*classification_dict['roc_auc_score']-1
-classification_dict['sensibility'] = classification_dict['confusion_matrix'][1,1]/sum(classification_dict['confusion_matrix'][1,:])
-classification_dict['specificity'] = classification_dict['confusion_matrix'][0,0]/sum(classification_dict['confusion_matrix'][0,:])
-
-#create DataFrame
-classification_metrics = df.from_dict(classification_dict, orient = 'index')
-# =============================================================================
-print(classification_metrics)
-print(regression_metrics)
-
-#Export to excel
-#pd.regression_metrics.to_excel
-# =============================================================================
+    regression_metrics, classification_metrics = compute_metrics(
+            df.behavioural_risk, df.predicted_behavioural_risk, df.BC_bhv, df.BC_reg
+            )
+    #Export to excel
+    regression_metrics.to_excel("linear_regression_metrics.xlsx")
+    classification_metrics.to_excel("classification_metrics.xlsx")
+    # =============================================================================
