@@ -37,6 +37,7 @@ for path in PATH_TO_APPEND_LIST:
    
 import pandas as pd
 from constants import TABLES
+from sklearn.linear_model import LinearRegression
       
 with open(os.path.join(TABLES, 'private_entity_model.csv')) as file:
     ent_p2 = pd.read_csv(file, sep=';')
