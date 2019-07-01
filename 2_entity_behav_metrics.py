@@ -37,12 +37,9 @@ for path in PATH_TO_APPEND_LIST:
 #IMPORTS - PYTHON MODULES
         
 import pandas as pd
-from warnings import warn
-from sklearn import metrics
-#may need to import more things from sklearn. Not sure why sklearn will not import
 
 #User defined constants
-from constants import DATA, TABLES
+from constants import TABLES
 from general_utils import compute_metrics
 # =============================================================================
 # =============================================================================
@@ -57,6 +54,9 @@ for seg_name in ['private', 'enterprise']:
             df.behavioural_risk, df.predicted_behavioural_risk, df.BC_bhv, df.BC_reg
             )
     #Export to excel
-    regression_metrics.to_excel("linear_regression_metrics.xlsx")
-    classification_metrics.to_excel("classification_metrics.xlsx")
+    with ExcelWriter("1_Data_Files/Metrics.xlsx") as writer:
+        regression_metrics.to_excel(writer, sheet_name = "Linear Regression" )
+        classification_metrics.to_excel(writer, sheet_name = "Classification")
+        
+        
     # =============================================================================
