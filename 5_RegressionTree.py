@@ -44,7 +44,7 @@ from sklearn.tree import export_graphviz
 
 #User defined constants
 from constants import TABLES
-from general_utils import compute_metrics
+#from general_utils import compute_metrics
 
 
 with open(os.path.join(TABLES, 'enterprise_entity_model.csv')) as file:

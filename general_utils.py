@@ -11,7 +11,7 @@ from sklearn import metrics
 
 # =============================================================================
 def compute_metrics(y_true_cts, y_pred_cts, y_true_bin, y_pred_bin):
-    #Regression metrics
+    #Linear Regression metrics
     
     y_true = y_true_cts
     y_pred = y_pred_cts
@@ -21,7 +21,7 @@ def compute_metrics(y_true_cts, y_pred_cts, y_true_bin, y_pred_bin):
     regression_dict['max_error'] = metrics.max_error(y_true, y_pred)
     regression_dict['mean_absolute_error'] = metrics.mean_absolute_error(y_true, y_pred)
     regression_dict['mean_squared_error'] = metrics.mean_squared_error(y_true, y_pred)
-    regression_dict['mean_squared_log_error'] = metrics.mean_squared_log_error(y_true, y_pred)
+    #regression_dict['mean_squared_log_error'] = metrics.mean_squared_log_error(y_true, y_pred)
     regression_dict['median_absolute_error'] = metrics.median_absolute_error(y_true, y_pred)
     regression_dict['r2'] = metrics.r2_score(y_true, y_pred)
     

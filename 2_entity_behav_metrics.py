@@ -56,6 +56,8 @@ for seg_name in ['private', 'enterprise']:
     #Export to excel
     #writer = pd.ExcelWriter("1_Data_Files/Metrics.xlsx", engine = xlsxwriter)
     with pd.ExcelWriter("1_Data_Files/Metrics.xlsx") as writer:
-        regression_metrics.to_excel(writer, sheet_name = "Linear Regression" )
-        classification_metrics.to_excel(writer, sheet_name = "Classification")
+        regression_metrics.to_excel(writer, sheet_name = "E Linear Regression" )
+        classification_metrics.to_excel(writer, sheet_name = "E Classification")
+        
+        #TODO: create xlsx sheets for private too
     # =============================================================================
