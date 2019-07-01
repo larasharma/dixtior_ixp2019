@@ -39,25 +39,47 @@ for path in PATH_TO_APPEND_LIST:
 import pandas as pd
 
 #User defined constants
-from constants import TABLES
+from constants import TABLES, DATA
 from general_utils import compute_metrics
+
 # =============================================================================
 # =============================================================================
 #IMPORT DATA
 for seg_name in ['private', 'enterprise']: 
     print('-' *50, '\n', seg_name, '\n')
     #for the regression metrics
-    with open(os.path.join(TABLES, '%s_entity_model.csv'%seg_name)) as file:
+    with open(os.path.join(TABLES, '%s_entity_model_5.csv'%seg_name)) as file:
         df = pd.read_csv(file, sep=';')
-    
-    regression_metrics, classification_metrics = compute_metrics(
-            df.behavioural_risk, df.predicted_behavioural_risk, df.BC_bhv, df.BC_reg
-            )
-    #Export to excel
-    #writer = pd.ExcelWriter("1_Data_Files/Metrics.xlsx", engine = xlsxwriter)
-    with pd.ExcelWriter("1_Data_Files/Metrics.xlsx") as writer:
-        regression_metrics.to_excel(writer, sheet_name = "E Linear Regression" )
-        classification_metrics.to_excel(writer, sheet_name = "E Classification")
+    for name, (y_pred_cts_aux, y_pred_bin_aux, y_pred_score_aux) in [
+            ('current_acceptance', ('predicted_behavioural_risk', 'BC_reg', None) ),
+            ('logistic_regression', (None, 'BC_logistic_reg', 'score_logistic_reg') )
+            #TODO: add the tuples for linear regression and regression tree
+            ]:
+        print(name)
+        if y_pred_cts_aux is not None:
+            y_pred_cts = df[y_pred_cts_aux]
+        else:
+            y_pred_cts = None
+
+        if y_pred_bin_aux is not None:
+            y_pred_bin = df[y_pred_bin_aux]
+        else:
+            y_pred_bin = None
+            
+        if y_pred_score_aux is not None:
+            y_pred_score = df[y_pred_score_aux]
+        else:
+            y_pred_score = None
         
-        #TODO: create xlsx sheets for private too
+        regression_metrics, classification_metrics = compute_metrics(
+                df.behavioural_risk, y_pred_cts, df.BC_bhv, y_pred_bin, y_pred_score
+                )
+        #Export to excel
+        #writer = pd.ExcelWriter("1_Data_Files/Metrics.xlsx", engine = xlsxwriter)
+        with pd.ExcelWriter( os.path.join(DATA, 'Metrics.xlsx')) as writer:
+            if not regression_metrics.empty:
+                regression_metrics.to_excel(writer, sheet_name = seg_name + '_' + name + "_Regression" )
+            if not classification_metrics.empty:            
+                classification_metrics.to_excel(writer, sheet_name = seg_name + '_' + name + "_Classification")
+        
     # =============================================================================

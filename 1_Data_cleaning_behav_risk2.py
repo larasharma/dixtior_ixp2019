@@ -40,7 +40,6 @@ for path in PATH_TO_APPEND_LIST:
         
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LinearRegression
 from warnings import warn
 
 #User defined constants
