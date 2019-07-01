@@ -44,7 +44,8 @@ from sklearn.linear_model import LinearRegression
 from warnings import warn
 
 #User defined constants
-from constants import DATA, TABLES, P, WEIGHTED_HOLDER_BOOL, MODEL_VARIABLES_DICT, BEHAVIOURAL_BOUNDARY
+from constants import DATA, TABLES, P, WEIGHTED_HOLDER_BOOL, \
+    MODEL_VARIABLES_DICT, BEHAVIOURAL_BOUNDARY, USE_DORMANT_BOOL
 
 from weights_and_limits import BEHAVIOURAL_RISK_LIMITS, ACCEPTANCE_RISK_LIMITS
 
@@ -151,13 +152,17 @@ ent['date_of_birth'] = abs(ent['date_of_birth'])
 ent_client = ent_client.drop(['is_first'], axis=1)
 behavioural_risk = behavioural_risk.drop(['discrete_risk'], axis=1)
 #br_df = br_df.drop(columns = ['continuous_risk', 'cluster' ], axis=1)
-ec_acc_df = pd.merge(ent_client,acc, left_on="client_number", 
+ec_acc_df = pd.merge(ent_client, acc, left_on="client_number", 
                      right_on="client_number")
 
 #Creating one large dataset connecting entity number to behavioral risk
 entity_behav_risk_df = pd.merge(behavioural_risk, ec_acc_df, 
                                 left_on="account_number", 
                                 right_on="account_number", how='inner')
+
+#Remove dormant cluster, if needed
+if not USE_DORMANT_BOOL:
+    entity_behav_risk_df = entity_behav_risk_df.query('cluster != 660')    
 
 #Reordering the columns
 entity_behav_risk_df = entity_behav_risk_df[['entity_number','client_number',
@@ -199,13 +204,16 @@ else:
 #Validate weights add up to one
 weight_sum = entity_behav_risk_df2.groupby('entity_number')['weight'].sum()
 assert ( (weight_sum-1).abs() > 1e-6 ).sum() == 0, 'The weights dont add up to 1'
-    
-entity_behav_risk_df2['holder_aux'] = (
-    entity_behav_risk_df2['weight'] * entity_behav_risk_df2['continuous_risk']**P
-    )
-holder = entity_behav_risk_df2.groupby('entity_number')['holder_aux'].sum()**(1/P)
+
+if P == np.inf:
+    holder = entity_behav_risk_df2.groupby('entity_number')['continuous_risk'].max()
+else:
+    entity_behav_risk_df2['holder_aux'] = (
+        entity_behav_risk_df2['weight'] * entity_behav_risk_df2['continuous_risk']**P
+        )
+    holder = entity_behav_risk_df2.groupby('entity_number')['holder_aux'].sum()**(1/P)
 holder_df = holder.to_frame('behavioural_risk')
-holder_df['BC_bhv'] = holder_df['behavioural_risk']>BEHAVIOURAL_BOUNDARY
+holder_df['BC_bhv'] = holder_df['behavioural_risk'] > BEHAVIOURAL_BOUNDARY
 
 entity_behav_risk_final = pd.merge(
         ent, holder_df, left_on='entity_number', 
@@ -248,6 +256,9 @@ for df in [ent_e, ent_p]:
 
 df_aux = entity_behav_risk_final[ ['entity_number', 'reg'] ].copy()
 df_aux['d_reg'] = np.digitize(df_aux['reg'], [0] + BEHAVIOURAL_RISK_LIMITS + [1] )
+df_aux.loc[ df_aux['d_reg'] == len(ACCEPTANCE_RISK_LIMITS)+2, 'd_reg'] =(
+        len(ACCEPTANCE_RISK_LIMITS)+1
+        )
 
 
 def reg_merge( df_aux, risk_limits, string, minimum, maximum ):
@@ -269,24 +280,11 @@ print(dreg_merge.columns)
 R_delta_name = "R_delta"
 y_name = 'predicted_behavioural_risk' 
 
-
 dreg_merge[R_delta_name] = (dreg_merge.reg - dreg_merge.R_lower) / (dreg_merge.R_upper - dreg_merge.R_lower)
 dreg_merge[y_name] = (dreg_merge.B_lower) + dreg_merge[R_delta_name]*(dreg_merge.B_upper - dreg_merge.B_lower)
 
 # =============================================================================
 # merging dreg_merge with ent-e and ent-p with reg column
-
-#ent_e['reg'].duplicated().sum()
-#dreg_merge['reg'].duplicated().sum()
-
-
-#ent_e_right = ent_e.merge(dreg_merge, on ='reg', how= 'right').shape[0]
-#ent_e_left = ent_e.merge(dreg_merge, on='reg', how='left').shape[0]
-#ent_e_inner = ent_e.merge(dreg_merge, on='reg', how='inner').shape[0]
-#ent_e_outer = ent_e.merge(dreg_merge, on='reg', how='outer').shape[0]
-
-
-
 
 ent_e2 = ent_e.drop(['reg'], axis = 1).merge(dreg_merge.drop(
         ['R_lower', 'R_upper', 'B_lower', 'B_upper', 'R_delta'], axis = 1 
@@ -308,57 +306,36 @@ with open( os.path.join(TABLES, 'enterprise_entity_model.csv'), 'w') as file:
     ent_e2.to_csv(file, index = False, sep = ';')
 
 
-
-
 # =============================================================================
 ## Check with Henrique and Miguel:
 
-
-
 ## Linear regression for the empresas
-#independent_variables = ent_e[['economic_activity_code_risk',
-               #'society_type_risk', 'country_of_residence_risk']]
-#target_variable = ent_e['behavioural_risk']
+independent_variables_e = ent_e2[['economic_activity_code_risk',
+               'society_type_risk', 'country_of_residence_risk']].values
+target_variable = ent_e2['behavioural_risk'].values
 
-#model = LinearRegression()
-#model.fit(X=independent_variables, y=target_variable)
-#predictions = model.predict(independent_variables)
+model = LinearRegression()
+model.fit(X=independent_variables_e, y=target_variable)
+predictions_E = model.predict(independent_variables_e) 
+predictions_E = pd.Series(predictions_E )
 
-#model.intercept_
-#model.coef_
+model.intercept_
+coefs_E = model.coef_
 
 ## Linear regression for the particulares
-#independent_variables_p = ent_p[['age_risk', 'nationality_risk', 'occupation_risk', 
-               #'qualifications_risk', 'country_of_residence_risk']]
-#target_variable_p = ent_p['behavioural_risk']
+independent_variables_p = ent_p2[['age_risk', 'nationality_risk', 'occupation_risk', 
+               'qualifications_risk', 'country_of_residence_risk']].values
+target_variable_p = ent_p2['behavioural_risk'].values
 
 
-#model.fit(X=independent_variables_p, y=target_variable_p)
-#predictions = model.predict(independent_variables_p)
-
-#model.intercept_
-#model.coef_
+model.fit(X=independent_variables_p, y=target_variable_p)
+predictions_P =  model.predict(independent_variables_p) 
+predictions_P = pd.Series(predictions_P )
 
 
-
-
-
-
+model.intercept_
+coefs_P = model.coef_
 
 # ============================================================================
-
-
-#df_aux['d_reg'] = 5
-#df_aux['d_reg'] = np.where(entity_behav_risk_final['reg']<=0.8, 
-                       #4, entity_behav_risk_final['reg'])
-#df_aux['d_reg'] = np.where(entity_behav_risk_final['reg']<=0.6, 
-                       #3, entity_behav_risk_final['reg'])
-#df_aux['d_reg'] = np.where(entity_behav_risk_final['reg']<=0.4,
-                      #2, entity_behav_risk_final['reg'])
-#df_aux['d_reg'] = np.where(entity_behav_risk_final['reg']<=0.2, 
-                       #1, entity_behav_risk_final['reg'])
-
-
-
 
 
