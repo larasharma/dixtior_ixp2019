@@ -44,6 +44,7 @@ from sklearn.tree import export_graphviz
 
 #User defined constants
 from constants import TABLES
+from general_utils import compute_metrics
 
 
 with open(os.path.join(TABLES, 'enterprise_entity_model.csv')) as file:
@@ -78,7 +79,7 @@ dot_data_P = export_graphviz(tree_regressor_P, out_file=None,
     
 graph = graphviz.Source(dot_data_P)
 graph.format = 'png'
-graph.render('tree',view=True);
+graph.render('tree_P',view=True);
 
 
 #Regression tree for empresas:
@@ -105,4 +106,10 @@ dot_data_E = export_graphviz(tree_regressor_E, out_file=None,
     
 graph = graphviz.Source(dot_data_E)
 graph.format = 'png'
-graph.render('tree',view=True);
+graph.render('tree_E',view=True);
+# =============================================================================
+"""
+are there even metrics to run on this??
+regression_tree_metrics = compute_metrics()
+"""
+# =============================================================================
