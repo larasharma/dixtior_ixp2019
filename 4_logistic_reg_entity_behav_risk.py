@@ -43,7 +43,7 @@ import warnings
 warnings.simplefilter("ignore")
 
 #User defined constants
-from constants import TABLES
+from constants import TABLES, RANDOM_STATE, MODEL_VARIABLES_DICT
 
 with open(os.path.join(TABLES, 'enterprise_entity_model.csv')) as file:
     ent_E = pd.read_csv(file, sep=';') 
@@ -52,39 +52,27 @@ with open(os.path.join(TABLES, 'private_entity_model.csv')) as file:
     
 # =============================================================================
 
-#1 represents a high risk account
+for seg, seg_name in [ ('E', 'enterprise'), ('P', 'private') ]:
+
+    with open(os.path.join(TABLES, '%s_entity_model_3.csv'%seg_name)) as file:
+        df = pd.read_csv(file, sep=';')
     
-ent_E["BC_bhv"] = ent_E["BC_bhv"].replace(True, 1)
-ent_P["BC_bhv"] = ent_P["BC_bhv"].replace(True, 1)
+    logisticRegr = LogisticRegression(class_weight='balanced', random_state = RANDOM_STATE)
 
-# =============================================================================
+    target = df["BC_bhv"]
+    independent = df[ MODEL_VARIABLES_DICT[seg] ]
+    
+    x_train, x_test, y_train, y_test = train_test_split(
+            independent, target, test_size=0.2, random_state = RANDOM_STATE)
 
-logisticRegr = LogisticRegression()
+    logisticRegr.fit(x_train, y_train)
+    predictions_ent = pd.Series(logisticRegr.predict(x_test), index= x_test.index )
+    score_ent = pd.Series(logisticRegr.predict_proba(x_test)[:,1], index= x_test.index )
 
-target_P = ent_P["BC_bhv"]
-independent_P = ent_P[ ['age_risk', 'nationality_risk', 
-    'occupation_risk', 'qualifications_risk', 'country_of_residence_risk'] ]
-
-xp = independent_P
-yp = target_P
-
-xp_train, xp_test, yp_train, yp_test = train_test_split(xp, yp, test_size=0.2)
-
-logisticRegr.fit(xp_train, yp_train)
-predictions_ent_p = logisticRegr.predict(xp_test)
-
-# =============================================================================
-
-target_E = ent_E["BC_bhv"]
-independent_E = ent_E[ ['economic_activity_code_risk',
-    'society_type_risk', 'country_of_residence_risk'] ]
-
-xe = independent_E
-ye = target_E
-
-xe_train, xe_test, ye_train, ye_test = train_test_split(xe, ye, test_size=0.2)
-
-logisticRegr.fit(xe_train, ye_train)
-predictions_ent_e = logisticRegr.predict(xe_test)
-
+    df2 = df.loc[x_test.index].copy()
+    df2['BC_logistic_reg'] = predictions_ent
+    df2['score_logistic_reg'] = score_ent
+    
+    with open( os.path.join(TABLES, '%s_entity_model_4.csv'%seg_name), 'w') as file:
+        df2.to_csv(file, index = False, sep = ';')
 
