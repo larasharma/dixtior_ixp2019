@@ -36,43 +36,37 @@ for path in PATH_TO_APPEND_LIST:
 #IMPORTS & PYTHON MODULES
    
 import pandas as pd
-from constants import TABLES
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from constants import TABLES, RANDOM_STATE, MODEL_VARIABLES_DICT
       
 with open(os.path.join(TABLES, 'private_entity_model.csv')) as file:
     ent_p2 = pd.read_csv(file, sep=';')
 with open(os.path.join(TABLES, 'enterprise_entity_model.csv')) as file:
     ent_e2 = pd.read_csv(file, sep=';')
-
+    
 # =============================================================================
+#LINEAR REGRESSION FOR BOTH ENTITY TYPES
 
-#Script for Linear Regession Enitity Behavioral Risk
+for seg, seg_name in [ ('E', 'enterprise'), ('P', 'private') ]:
 
-independent_variables_e = ent_e2[['economic_activity_code_risk',
-               'society_type_risk', 'country_of_residence_risk']].values
-target_variable = ent_e2['behavioural_risk'].values
+    with open(os.path.join(TABLES, '%s_entity_model.csv'%seg_name)) as file:
+        df = pd.read_csv(file, sep=';')
+    
+    model = LinearRegression()
 
-model = LinearRegression()
-model.fit(X=independent_variables_e, y=target_variable)
-predictions_E = model.predict(independent_variables_e) 
-predictions_E = pd.Series(predictions_E )
+    target = df["behavioural_risk"]
+    independent = df[ MODEL_VARIABLES_DICT[seg] ]
+    
+    X_train, X_test, y_train, y_test = train_test_split(
+            independent, target, test_size=0.2, random_state = RANDOM_STATE)
 
-model.intercept_
-coefs_E = model.coef_
+    model.fit(X_train, y_train)
+    predictions_ent = pd.Series(model.predict(X_test), index= X_test.index )
 
-## Linear regression for the particulares
-independent_variables_p = ent_p2[['age_risk', 'nationality_risk', 'occupation_risk', 
-               'qualifications_risk', 'country_of_residence_risk']].values
-target_variable_p = ent_p2['behavioural_risk'].values
-
-
-model.fit(X=independent_variables_p, y=target_variable_p)
-predictions_P =  model.predict(independent_variables_p) 
-predictions_P = pd.Series(predictions_P )
-
-
-model.intercept_
-coefs_P = model.coef_
-
-# =============================================================================
-
+    df2 = df.loc[X_test.index].copy()
+    df2['linear_reg_pred'] = predictions_ent
+    
+    with open( os.path.join(TABLES, '%s_entity_model_3.csv'%seg_name), 
+              'w') as file:
+        df2.to_csv(file, index = False, sep = ';')
