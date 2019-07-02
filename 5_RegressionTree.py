@@ -39,11 +39,12 @@ for path in PATH_TO_APPEND_LIST:
         
 import pandas as pd
 from sklearn.tree import DecisionTreeRegressor
-import graphviz
-from sklearn.tree import export_graphviz
+from sklearn.model_selection import train_test_split
+#import graphviz
+#from sklearn.tree import export_graphviz
 
 #User defined constants
-from constants import TABLES
+from constants import TABLES, MODEL_VARIABLES_DICT, RANDOM_STATE
 #from general_utils import compute_metrics
 
 
@@ -56,7 +57,7 @@ with open(os.path.join(TABLES, 'private_entity_model.csv')) as file:
 # =============================================================================
 # Regression Tree
 # =============================================================================
-
+'''
 #Regression tree for private:
 target_regression_tree_P = "behavioural_risk"
 independent_regression_tree_P = ['age_risk', 'nationality_risk', 
@@ -107,9 +108,37 @@ dot_data_E = export_graphviz(tree_regressor_E, out_file=None,
 graph = graphviz.Source(dot_data_E)
 graph.format = 'png'
 graph.render('tree_E',view=True);
+'''
 # =============================================================================
 """
 are there even metrics to run on this??
 regression_tree_metrics = compute_metrics()
 """
 # =============================================================================
+
+for seg, seg_name in [ ('E', 'enterprise'), ('P', 'private') ]:
+
+    with open(os.path.join(TABLES, '%s_entity_model_4.csv'%seg_name)) as file:
+        df = pd.read_csv(file, sep=';')
+    
+    tree_regression = DecisionTreeRegressor(max_depth = 5, 
+                                            random_state = RANDOM_STATE)
+
+    target = df["behavioural_risk"]
+    logistic_variable = ['BC_logistic_reg']
+    independent_columns = logistic_variable+MODEL_VARIABLES_DICT[seg]
+    independent = df[independent_columns]
+    
+    X_train, X_test, y_train, y_test = train_test_split(
+            independent, target, test_size=0.2, random_state = RANDOM_STATE)
+
+    tree_regression.fit(X_train, y_train)
+    predictions_ent = pd.Series(tree_regression.predict(X_test), 
+                                index= X_test.index )
+
+    df2 = df.loc[X_test.index].copy()
+    df2['reg_tree'] = predictions_ent
+    
+    with open( os.path.join(TABLES, '%s_entity_model_5.csv'%seg_name), 
+              'w') as file:
+        df2.to_csv(file, index = False, sep = ';')
