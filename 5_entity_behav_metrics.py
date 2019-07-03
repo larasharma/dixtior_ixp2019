@@ -50,7 +50,7 @@ writer = pd.ExcelWriter( os.path.join(RESULTS, 'Metrics.xlsx'), engine='xlsxwrit
 for seg, seg_name in [('P','private'), ('E','enterprise')]: 
     print('-' *50, '\n', seg_name, '\n')
     #for the regression metrics
-    with open(os.path.join(TABLES, '%s_entity_model_5.csv'%seg_name)) as file:
+    with open(os.path.join(TABLES, '%s_entity_model_4.csv'%seg_name)) as file:
         df0 = pd.read_csv(file, sep=';')
         
     for name, (y_pred_cts_aux, y_pred_bin_aux, y_pred_score_aux) in [

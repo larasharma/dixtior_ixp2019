@@ -56,7 +56,7 @@ from constants import TABLES, MODEL_VARIABLES_DICT, RANDOM_STATE, BEHAVIOURAL_BO
 
 for seg, seg_name in [ ('E', 'enterprise'), ('P', 'private') ]:
 
-    with open(os.path.join(TABLES, '%s_entity_model_4.csv'%seg_name)) as file:
+    with open(os.path.join(TABLES, '%s_entity_model_3.csv'%seg_name)) as file:
         df = pd.read_csv(file, sep=';')
     
     tree_regression = DecisionTreeRegressor(max_depth = 5, 
@@ -81,7 +81,7 @@ for seg, seg_name in [ ('E', 'enterprise'), ('P', 'private') ]:
     df['reg_tree_pred'] = predictions_ent
     df['BC_reg_tree'] = predictions_ent > BEHAVIOURAL_BOUNDARY
     
-    with open( os.path.join(TABLES, '%s_entity_model_5.csv'%seg_name), 
+    with open( os.path.join(TABLES, '%s_entity_model_4.csv'%seg_name), 
               'w') as file:
         df.to_csv(file, index = False, sep = ';')
 

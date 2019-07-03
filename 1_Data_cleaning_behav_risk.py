@@ -302,10 +302,10 @@ assert ent_p2['entity_number'].duplicated().sum() == 0
 ent_p2['train_test_current_acceptance'] = 'test'
 ent_e2['train_test_current_acceptance'] = 'test'
 
-with open( os.path.join(TABLES, 'private_entity_model.csv'), 'w') as file:
+with open( os.path.join(TABLES, 'private_entity_model_1.csv'), 'w') as file:
     ent_p2.to_csv(file, index = False, sep = ';')
 
-with open( os.path.join(TABLES, 'enterprise_entity_model.csv'), 'w') as file:
+with open( os.path.join(TABLES, 'enterprise_entity_model_1.csv'), 'w') as file:
     ent_e2.to_csv(file, index = False, sep = ';')
 
 
