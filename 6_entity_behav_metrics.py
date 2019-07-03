@@ -39,22 +39,29 @@ for path in PATH_TO_APPEND_LIST:
 import pandas as pd
 
 #User defined constants
-from constants import TABLES, DATA
+from constants import TABLES, USE_ONLY_TEST_FOR_METRICS_BOOL, RESULTS
 from general_utils import compute_metrics
 
 # =============================================================================
 # =============================================================================
+writer = pd.ExcelWriter( os.path.join(RESULTS, 'Metrics.xlsx'), engine='xlsxwriter')
+
 #IMPORT DATA
-for seg_name in ['private', 'enterprise']: 
+for seg, seg_name in [('P','private'), ('E','enterprise')]: 
     print('-' *50, '\n', seg_name, '\n')
     #for the regression metrics
     with open(os.path.join(TABLES, '%s_entity_model_5.csv'%seg_name)) as file:
-        df = pd.read_csv(file, sep=';')
+        df0 = pd.read_csv(file, sep=';')
+        
     for name, (y_pred_cts_aux, y_pred_bin_aux, y_pred_score_aux) in [
             ('current_acceptance', ('predicted_behavioural_risk', 'BC_reg', None) ),
-            ('logistic_regression', (None, 'BC_logistic_reg', 'score_logistic_reg') )
-            #TODO: add the tuples for linear regression and regression tree
+            ('linear_reg', ('linear_reg_pred', 'BC_linear_reg', None) ),
+            ('logistic_reg', (None, 'BC_logistic_reg', 'score_logistic_reg') ),
+            ('reg_tree', ('reg_tree_pred', 'BC_reg_tree', None) )
             ]:
+        if USE_ONLY_TEST_FOR_METRICS_BOOL:
+            df = df0.query('train_test_%s == "test" ' % name)
+
         print(name)
         if y_pred_cts_aux is not None:
             y_pred_cts = df[y_pred_cts_aux]
@@ -75,11 +82,12 @@ for seg_name in ['private', 'enterprise']:
                 df.behavioural_risk, y_pred_cts, df.BC_bhv, y_pred_bin, y_pred_score
                 )
         #Export to excel
-        #writer = pd.ExcelWriter("1_Data_Files/Metrics.xlsx", engine = xlsxwriter)
-        with pd.ExcelWriter( os.path.join(DATA, 'Metrics.xlsx')) as writer:
-            if not regression_metrics.empty:
-                regression_metrics.to_excel(writer, sheet_name = seg_name + '_' + name + "_Regression" )
-            if not classification_metrics.empty:            
-                classification_metrics.to_excel(writer, sheet_name = seg_name + '_' + name + "_Classification")
+
+        if not regression_metrics.empty:
+            regression_metrics.to_excel(writer, sheet_name = seg + '_' + name + "_Reg" )
+        if not classification_metrics.empty:            
+            classification_metrics.to_excel(writer, sheet_name = seg + '_' + name + "_BC")
         
     # =============================================================================
+writer.save()
+writer.close()

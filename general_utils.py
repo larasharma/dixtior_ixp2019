@@ -20,7 +20,7 @@ def compute_metrics(y_true_cts, y_pred_cts, y_true_bin, y_pred_bin, y_pred_score
         y_pred = y_pred_cts
         
         regression_dict['explained_variance_score'] = metrics.explained_variance_score(y_true, y_pred)
-        regression_dict['max_error'] = metrics.max_error(y_true, y_pred)
+        #regression_dict['max_error'] = metrics.max_error(y_true, y_pred)
         regression_dict['mean_absolute_error'] = metrics.mean_absolute_error(y_true, y_pred)
         regression_dict['mean_squared_error'] = metrics.mean_squared_error(y_true, y_pred)
         #regression_dict['mean_squared_log_error'] = metrics.mean_squared_log_error(y_true, y_pred)

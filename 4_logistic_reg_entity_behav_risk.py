@@ -44,11 +44,6 @@ warnings.simplefilter("ignore")
 
 #User defined constants
 from constants import TABLES, RANDOM_STATE, MODEL_VARIABLES_DICT
-
-with open(os.path.join(TABLES, 'enterprise_entity_model.csv')) as file:
-    ent_E = pd.read_csv(file, sep=';') 
-with open(os.path.join(TABLES, 'private_entity_model.csv')) as file:
-    ent_P = pd.read_csv(file, sep=';') 
     
 # =============================================================================
 
@@ -66,13 +61,16 @@ for seg, seg_name in [ ('E', 'enterprise'), ('P', 'private') ]:
             independent, target, test_size=0.2, random_state = RANDOM_STATE)
 
     logisticRegr.fit(x_train, y_train)
-    predictions_ent = pd.Series(logisticRegr.predict(x_test), index= x_test.index )
-    score_ent = pd.Series(logisticRegr.predict_proba(x_test)[:,1], index= x_test.index )
+    predictions_ent = pd.Series(logisticRegr.predict(independent), index= df.index )
+    score_ent = pd.Series(logisticRegr.predict_proba(independent)[:,1], index= df.index )
 
-    df2 = df.loc[x_test.index].copy()
-    df2['BC_logistic_reg'] = predictions_ent
-    df2['score_logistic_reg'] = score_ent
+    df['train_test_logistic_reg'] = 'train'
     
+    df.loc[x_test.index, 'train_test_logistic_reg'] = 'test'
+    df['BC_logistic_reg'] = predictions_ent
+    df['score_logistic_reg'] = score_ent
+
+
     with open( os.path.join(TABLES, '%s_entity_model_4.csv'%seg_name), 'w') as file:
-        df2.to_csv(file, index = False, sep = ';')
+        df.to_csv(file, index = False, sep = ';')
 

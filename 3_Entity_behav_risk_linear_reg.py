@@ -38,13 +38,8 @@ for path in PATH_TO_APPEND_LIST:
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-from constants import TABLES, RANDOM_STATE, MODEL_VARIABLES_DICT
-      
-with open(os.path.join(TABLES, 'private_entity_model.csv')) as file:
-    ent_p2 = pd.read_csv(file, sep=';')
-with open(os.path.join(TABLES, 'enterprise_entity_model.csv')) as file:
-    ent_e2 = pd.read_csv(file, sep=';')
-    
+from constants import TABLES, RANDOM_STATE, MODEL_VARIABLES_DICT, BEHAVIOURAL_BOUNDARY
+          
 # =============================================================================
 #LINEAR REGRESSION FOR BOTH ENTITY TYPES
 
@@ -62,11 +57,15 @@ for seg, seg_name in [ ('E', 'enterprise'), ('P', 'private') ]:
             independent, target, test_size=0.2, random_state = RANDOM_STATE)
 
     model.fit(X_train, y_train)
-    predictions_ent = pd.Series(model.predict(X_test), index= X_test.index )
+    predictions_ent = pd.Series(model.predict(independent), index=df.index )
 
-    df2 = df.loc[X_test.index].copy()
-    df2['linear_reg_pred'] = predictions_ent
+    df['train_test_linear_reg'] = 'train'
+    
+    df.loc[X_test.index, 'train_test_linear_reg'] = 'test'
+    df['linear_reg_pred'] = predictions_ent
+    df['BC_linear_reg'] = predictions_ent > BEHAVIOURAL_BOUNDARY
+
     
     with open( os.path.join(TABLES, '%s_entity_model_3.csv'%seg_name), 
               'w') as file:
-        df2.to_csv(file, index = False, sep = ';')
+        df.to_csv(file, index = False, sep = ';')

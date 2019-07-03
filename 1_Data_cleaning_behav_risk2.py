@@ -298,6 +298,10 @@ assert ent_e2['entity_number'].duplicated().sum() == 0
 assert ent_p2['entity_number'].duplicated().sum() == 0
 
 
+#For the metrics to work on all for the initial aceptance
+ent_p2['train_test_current_acceptance'] = 'test'
+ent_e2['train_test_current_acceptance'] = 'test'
+
 with open( os.path.join(TABLES, 'private_entity_model.csv'), 'w') as file:
     ent_p2.to_csv(file, index = False, sep = ';')
 

@@ -11,6 +11,7 @@ RANDOM_STATE = 123
 
 
 DATA = os.path.join(PROJECT_PATH, '1_Data Files')
+RESULTS = os.path.join(PROJECT_PATH, '3_Results')
 
 P = inf  #For the Holder average
 
@@ -28,3 +29,5 @@ MODEL_VARIABLES_DICT = {
 BEHAVIOURAL_BOUNDARY = 0.6
 
 USE_DORMANT_BOOL = False
+
+USE_ONLY_TEST_FOR_METRICS_BOOL = True

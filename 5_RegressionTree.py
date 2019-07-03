@@ -47,15 +47,9 @@ from sklearn.model_selection import train_test_split
 #from sklearn.tree import export_graphviz
 
 #User defined constants
-from constants import TABLES, MODEL_VARIABLES_DICT, RANDOM_STATE
+from constants import TABLES, MODEL_VARIABLES_DICT, RANDOM_STATE, BEHAVIOURAL_BOUNDARY
 #from general_utils import compute_metrics
 
-
-with open(os.path.join(TABLES, 'enterprise_entity_model.csv')) as file:
-    ent_E = pd.read_csv(file, sep=';') 
-
-with open(os.path.join(TABLES, 'private_entity_model.csv')) as file:
-    ent_P = pd.read_csv(file, sep=';') 
 
 # =============================================================================
 #REGRESSION TREE FOR BOTH ENTITY TYPES
@@ -77,15 +71,19 @@ for seg, seg_name in [ ('E', 'enterprise'), ('P', 'private') ]:
             independent, target, test_size=0.2, random_state = RANDOM_STATE)
 
     tree_regression.fit(X_train, y_train)
-    predictions_ent = pd.Series(tree_regression.predict(X_test), 
-                                index= X_test.index )
+    predictions_ent = pd.Series(tree_regression.predict(independent), 
+                                index= df.index )
 
-    df2 = df.loc[X_test.index].copy()
-    df2['reg_tree'] = predictions_ent
+    df['train_test_reg_tree'] = 'train'
+    
+    df.loc[X_test.index, 'train_test_reg_tree'] = 'test'
+
+    df['reg_tree_pred'] = predictions_ent
+    df['BC_reg_tree'] = predictions_ent > BEHAVIOURAL_BOUNDARY
     
     with open( os.path.join(TABLES, '%s_entity_model_5.csv'%seg_name), 
               'w') as file:
-        df2.to_csv(file, index = False, sep = ';')
+        df.to_csv(file, index = False, sep = ';')
 
 
 
