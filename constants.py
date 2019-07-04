@@ -13,7 +13,7 @@ RANDOM_STATE = 123
 DATA = os.path.join(PROJECT_PATH, '1_Data Files')
 RESULTS = os.path.join(PROJECT_PATH, '3_Results')
 
-P = inf  #For the Holder average
+P = 4  #For the Holder average
 
 TABLES = os.path.join(SCRIPTS, 'tables')
 
